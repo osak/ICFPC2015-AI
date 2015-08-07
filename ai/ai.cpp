@@ -239,7 +239,7 @@ int main()
             map <pair<Point, int>, int> parent;
             
             que.pop();
-            
+            /*
             printf("%d %d : %d\n", i, j, board.currentScore + board.expectedScore);
             for (k = 0; k < H; k++) {
                 for (int l = 0; l < W; l++) {
@@ -248,7 +248,7 @@ int main()
                 puts("");
             }
             puts("");
-            
+            */
             if (board.currentScore > maxScore) {
                 maxScore = board.currentScore;
                 ans = board.commands;
@@ -377,8 +377,33 @@ int main()
     
     if (!que.empty() && que.top().currentScore > maxScore) ans = que.top().commands;
     
-    printf("%d\n", maxScore);
-    printf("%s\n", ans.c_str());
+    fprintf(stderr, "%d\n", maxScore);
+    
+    for (i = 0; i < ans.size();) {
+        if (ans[i] == 'C') {
+            if (ans[i + 1] == 'C') {
+                putchar('k');
+                i += 3;
+            } else {
+                putchar('d');
+                i += 2;
+            }
+        } else if (ans[i] == 'S') {
+            if (ans[i + 1] == 'W') {
+                putchar('a');
+            } else {
+                putchar('l');
+            }
+            i += 2;
+        } else {
+            if (ans[i] == 'W') {
+                putchar('p');
+            } else {
+                putchar('b');
+            }
+            i++;
+        }
+    }
     
     return 0;
 }
