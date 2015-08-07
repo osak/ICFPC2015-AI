@@ -1,4 +1,4 @@
-#include <cstdio>
+﻿#include <cstdio>
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -135,13 +135,57 @@ bool check(vector <vector <int> > &field, Point &pivot, int theta, int num) {
     return true;
 }
 
+struct TestEval{
+	int holeScore(const vector <vector <int> > &ff, const int num) {
+		auto f = ff;
+		int w = f.back().size();
+		Point st;
+		st.x = 0, st.y = w / 2; // 雑
+
+		queue<Point> q;
+		q.push(st);
+		if (!f[st.x][st.y]) {
+			f[st.x][st.y] = 1;
+			while (!q.empty()){
+				auto &p = q.front();
+				q.pop();
+				for (int k = 0; k < 4; ++k) {
+					auto nextPoint = p;
+					nextPoint.x += dx[k];
+					nextPoint.y += dy[p.x % 2][k];
+					if (nextPoint.x < 0 || nextPoint.x >= h || nextPoint.y < 0 || nextPoint.y >= w || f[nextPoint.x][nextPoint.y]) continue;
+					f[nextPoint.x][nextPoint.y] = 1;
+				}
+			}
+		}
+		int cnt = 0;
+		for (auto &v : f) for (auto & e : v) if (!e) ++cnt;
+		return cnt * -5;
+	}
+
+	int heightScore(const vector <vector <int> > &f) {
+		int h = f.size(), w = f.back().size();
+		for (int x = 0; x < h; ++x) {
+			for (int y = 0; y < w; ++y) {
+				if (f[x][y]) return -5 * (h - x);
+			}
+		}
+		return 0;
+	}
+
+
+	int calc(vector <vector <int> > &field, int num, vector<Unit> &units, vector<int> &source){
+		if (num == source.size()) return 0;
+
+		if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
+		return holeScore(field, num) + heightScore(field);
+	}
+};
+
 int calc(vector <vector <int> > &field, int num) {
-    // TODO:盤面から評価値を計算
-    if (num == source.size()) return 0;
-    
-    if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-    
-    return rand();
+	TestEval e;
+	return e.calc(field, num, units, source);
+
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
