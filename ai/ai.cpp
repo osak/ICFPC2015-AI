@@ -18,7 +18,8 @@ class Board {
     vector <vector <int> > field;
     
     bool operator<(const Board &b) const {
-        return currentScore + expectedScore < b.currentScore + b.expectedScore;
+        if (currentScore + expectedScore != b.currentScore + b.expectedScore) currentScore + expectedScore < b.currentScore + b.expectedScore;
+        if (currentScore != b.currentScore) return currentScore < b.currentScore;
     }
 };
 
@@ -56,11 +57,29 @@ string commandRotate[3] = {"WCC", "", "WC"};
 vector <Unit> units;
 vector <int> source;
 
-int calc(vector <vector <int> > &field, int num) {
-    // TODO:盤面から評価値を計算
-    return 0;
+// pivot からの相対座標に対する絶対座標を求める
+Point get(Point &pivot, int x, int y) {
+    Point point;
+    
+    point.x = pivot.x + x;
+    if (pivot.x % 2 == 0) {
+        if (x > 0) {
+            point.y = pivot.y + y + x / 2;
+        } else {
+            point.y = pivot.y + y + (x - 1) / 2;
+        }
+    } else {
+        if (x > 0) {
+            point.y = pivot.y + y + (x + 1) / 2;
+        } else {
+            point.y = pivot.y + y + x / 2;
+        }
+    }
+    
+    return point;
 }
 
+// 各 unit を pivot からの相対座標に直す
 void init(Unit &unit) {
     int topx = 1e9, lefty = 1e9, righty = 1e9, i;
     
@@ -78,10 +97,10 @@ void init(Unit &unit) {
     unit.pivot.x -= topx;
     
     for (i = 0; i < unit.member.size(); i++) {
-        int y = unit.pivot.y + unit.member[i].y + (unit.pivot.x + unit.member[i].x) / 2;
+        Point point = get(unit.pivot, unit.member[i].x, unit.member[i].y);
         
-        lefty = min(lefty, y);
-        righty = min(righty, W - y - 1);
+        lefty = min(lefty, point.y);
+        righty = min(righty, W - point.y - 1);
     }
     
     if (lefty >= righty) {
@@ -91,40 +110,34 @@ void init(Unit &unit) {
     }
 }
 
+// pivot と回転角から point の絶対座標を求める
 Point get(Point &pivot, int theta, Point &point) {
     int px, py;
-    Point p;
     
     px = pxx[theta] * point.x + pxy[theta] * point.y;
     py = pyx[theta] * point.x + pyy[theta] * point.y;
     
-    p.x = pivot.x + px;
-    if (pivot.x % 2 == 0) {
-        if (px > 0) {
-            p.y = pivot.y + py + px / 2;
-        } else {
-            p.y = pivot.y + py + (px - 1) / 2;
-        }
-    } else {
-        if (px > 0) {
-            p.y = pivot.y + py + (px + 1) / 2;
-        } else {
-            p.y = pivot.y + py + px / 2;
-        }
-    }
-    
-    return p;
+    return get(pivot, px, py);
 }
 
-bool check(Board &board, Point &point, int theta, int num) {
+bool check(vector <vector <int> > &field, Point &pivot, int theta, int num) {
     int i;
     
     for (i = 0; i < units[source[num]].member.size(); i++) {
-        Point p = get(point, theta, units[source[num]].member[i]);
-        if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || board.field[p.x][p.y] == 1) return false;
+        Point p = get(pivot, theta, units[source[num]].member[i]);
+        if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x][p.y] == 1) return false;
     }
     
     return true;
+}
+
+int calc(vector <vector <int> > &field, int num) {
+    // TODO:盤面から評価値を計算
+    if (num == source.size()) return 0;
+    
+    if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
+    
+    return 0;
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
@@ -186,15 +199,6 @@ int main()
         
         init(unit);
         
-        printf("   %d\n", i);
-        printf("pivot : %d %d\n", unit.pivot.x, unit.pivot.y);
-        for (j = 0; j < count; j++) {
-            Point p = get(unit.pivot, 0, unit.member[j]);
-            
-            printf("%d %d  (%d %d)\n", p.x, p.y, unit.member[j].x, unit.member[j].y);
-        }
-        puts("");
-        
         units.push_back(unit);
     }
     
@@ -220,8 +224,6 @@ int main()
         source.push_back(id);
     }
     
-    return 0;
-    
     initBoard.currentScore = initBoard.previousLine = 0;
     initBoard.expectedScore = calc(field, 0);
     initBoard.commands = "";
@@ -238,10 +240,21 @@ int main()
             
             que.pop();
             
+            printf("%d %d : %d\n", i, j, board.currentScore + board.expectedScore);
+            for (k = 0; k < H; k++) {
+                for (int l = 0; l < W; l++) {
+                    printf("%d", board.field[k][l]);
+                }
+                puts("");
+            }
+            puts("");
+            
             if (board.currentScore > maxScore) {
                 maxScore = board.currentScore;
                 ans = board.commands;
             }
+            
+            if (!check(board.field, units[source[i]].pivot, 0, i)) continue;
             
             parent[make_pair(units[source[i]].pivot, 0)] = -1;
             queBFS.push(make_pair(units[source[i]].pivot, 0));
@@ -260,7 +273,7 @@ int main()
                     nextPoint.x += dx[k];
                     nextPoint.y += dy[point.x % 2][k];
                     
-                    if (check(board, nextPoint, theta, i)) {
+                    if (check(board.field, nextPoint, theta, i)) {
                         if (!parent.count(make_pair(nextPoint, theta))) {
                             parent[make_pair(nextPoint, theta)] = k;
                             queBFS.push(make_pair(nextPoint, theta));
@@ -276,7 +289,7 @@ int main()
                         
                         Point nowPoint = point;
                         int nowTheta = theta;
-                        string commands = "";
+                        string commands = commandMove[k];
                         while (1) {
                             int commandNum = parent[make_pair(nowPoint, nowTheta)];
                             
@@ -307,7 +320,7 @@ int main()
                     
                     int nextTheta = (theta + k + 6) % 6;
                     
-                    if (check(board, point, nextTheta, i)) {
+                    if (check(board.field, point, nextTheta, i)) {
                         if (!parent.count(make_pair(point, nextTheta))) {
                             parent[make_pair(point, nextTheta)] = k + 5;
                             queBFS.push(make_pair(point, nextTheta));
@@ -323,7 +336,7 @@ int main()
                         
                         Point nowPoint = point;
                         int nowTheta = theta;
-                        string commands = "";
+                        string commands = commandRotate[k + 1];
                         while (1) {
                             int commandNum = parent[make_pair(nowPoint, nowTheta)];
                             
@@ -364,6 +377,7 @@ int main()
     
     if (!que.empty() && que.top().currentScore > maxScore) ans = que.top().commands;
     
+    printf("%d\n", maxScore);
     printf("%s\n", ans.c_str());
     
     return 0;
