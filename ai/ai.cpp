@@ -18,8 +18,11 @@ class Board {
     vector <vector <int> > field;
     
     bool operator<(const Board &b) const {
-        if (currentScore + expectedScore != b.currentScore + b.expectedScore) currentScore + expectedScore < b.currentScore + b.expectedScore;
+        if (currentScore + expectedScore != b.currentScore + b.expectedScore) return currentScore + expectedScore < b.currentScore + b.expectedScore;
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
+        if (previousLine != b.previousLine) return previousLine < b.previousLine;
+        if (commands != b.commands) return commands < b.commands;
+        if (field != b.field) return field < b.field;
     }
 };
 
@@ -137,7 +140,7 @@ int calc(vector <vector <int> > &field, int num) {
     
     if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
     
-    return 0;
+    return rand();
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
@@ -171,6 +174,18 @@ void update(Board &board, Point &pivot, int theta, int num) {
     board.currentScore += point;
     if (board.previousLine > 1) board.currentScore += (board.previousLine - 1) * point / 10;
     board.previousLine = count;
+}
+
+void debug(Board &board) {
+    fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
+    fprintf(stderr, "%s\n", board.commands.c_str());
+    for (int i = 0; i < H; i++) {
+        for (int j = 0; j < W; j++) {
+            fprintf(stderr, "%d", board.field[i][j]);
+        }
+        fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "\n");
 }
 
 int main()
@@ -239,16 +254,9 @@ int main()
             map <pair<Point, int>, int> parent;
             
             que.pop();
-            /*
-            printf("%d %d : %d\n", i, j, board.currentScore + board.expectedScore);
-            for (k = 0; k < H; k++) {
-                for (int l = 0; l < W; l++) {
-                    printf("%d", board.field[k][l]);
-                }
-                puts("");
-            }
-            puts("");
-            */
+            
+            debug(board);
+            
             if (board.currentScore > maxScore) {
                 maxScore = board.currentScore;
                 ans = board.commands;
@@ -378,6 +386,7 @@ int main()
     if (!que.empty() && que.top().currentScore > maxScore) ans = que.top().commands;
     
     fprintf(stderr, "%d\n", maxScore);
+    fflush(stderr);
     
     for (i = 0; i < ans.size();) {
         if (ans[i] == 'C') {
