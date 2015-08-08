@@ -261,7 +261,7 @@ struct TestEval{
 		return sum * -200;
 	}
 
-	int chanceScore(const vector <BitRow> &f) {
+	int chanceScore(const vector <BitRow> &f, int leftTurn) {
 		int sum = 0;
 		for (int x = 0; x < H; ++x) {
 			int cnt = 0;
@@ -270,7 +270,7 @@ struct TestEval{
 			}
 			if (cnt == W - 1) sum += 150;
 		}
-		return sum;
+		return sum * (leftTurn < 10 ? 1 : -1);
 	}
     
     int chainScore(const vector <BitRow> &f) {
@@ -295,7 +295,7 @@ struct TestEval{
         if (num == source.size()) return 0;
         
         if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-		return holeScore(field, num) + heightScore(field) + chanceScore(field) + dangerScore(field);
+		return holeScore(field, num) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
     }
 };
 
@@ -356,7 +356,7 @@ void debug(Board &board) {
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../../ICFPC2015/cpp_input/problem_23_0.txt", "r", stdin);
+	freopen("../../ICFPC2015/cpp_input/problem_4_0.txt", "r", stdin);
 #endif
 
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
