@@ -11,7 +11,7 @@ using namespace std;
 */
 
 // 各 unit を pivot からの相対座標に直す
-void init(Unit &unit) {
+void init(Unit &unit, int H, int W) {
     int topx = 1e9, lefty = 1e9, righty = 1e9, i;
     
     for (i = 0; i < unit.member.size(); i++) {
@@ -91,7 +91,7 @@ Game createGameFromInput() {
 			unit.member.push_back(point);
 		}
         
-		init(unit);
+		init(unit, H, W);
         
 		unitTypes.push_back(unit);
     }

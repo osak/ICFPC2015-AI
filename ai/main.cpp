@@ -1,6 +1,8 @@
-﻿#include "common.h"
+#include "common.h"
 #include "io.h"
 #include "game.h"
+#include "lightningAI.h"
+#include "result.h"
 
 using namespace std;
 
@@ -16,7 +18,10 @@ int main()
 	Game g = createGameFromInput();
 
 	// サイズとかでAI変えたりしたいよね
-
-
-
+    
+    LightningAI ai(g);
+    
+    Result res = ai.run();
+    
+    printf("%s\n", res.command.c_str());
 }

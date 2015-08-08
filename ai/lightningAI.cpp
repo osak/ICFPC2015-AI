@@ -1,4 +1,4 @@
-﻿#include "lightningAI.h"
+#include "lightningAI.h"
 
 using namespace std;
 
