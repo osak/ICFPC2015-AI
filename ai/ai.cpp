@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -74,7 +74,6 @@ class Board {
         if (currentScore + expectedScore != b.currentScore + b.expectedScore) return currentScore + expectedScore < b.currentScore + b.expectedScore;
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
         if (previousLine != b.previousLine) return previousLine < b.previousLine;
-        if (commands != b.commands) return commands < b.commands;
         return hash < b.hash;
     }
 };
