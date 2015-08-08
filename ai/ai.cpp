@@ -46,7 +46,7 @@ class Unit {
     vector <Point> member;
 };
 
-const int beamWidth = 5;
+const int beamWidth = 1;
 int H, W;
 int pxx[6] = {1, 1, 0, -1, -1, 0};
 int pxy[6] = {0, 1, 1, 0, -1, -1};
@@ -446,7 +446,11 @@ int main()
         swap(que, queNext);
     }
     
-    if (!que.empty() && que.top().currentScore > maxScore) ans = que.top().commands;
+    while (!que.empty()) {
+        if (que.top().currentScore > maxScore) ans = que.top().commands;
+        
+        que.pop();
+    }
     
     fprintf(stderr, "%d\n", maxScore);
     fflush(stderr);
