@@ -1,4 +1,5 @@
 ﻿#include "lightningAI.h"
+#include "../evaluation/lightningeval.h"
 
 using namespace std;
 
@@ -52,18 +53,15 @@ void LightningAI::debug(Board &board) {
     fprintf(stderr, "\n");
 }
 
-int LightningAI::calc(Board &board, Unit &unit){
-	return Util::GetRandom();
-}
-
 Result LightningAI::run(){
 	int i, j, k;
 	int maxScore = -1;
-	int beamWidth = 10;
+	int beamWidth = 1;
 	string ans = "";
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
   
-    game.board.expectedScore = calc(game.board, game.units[0]);
+	LightningEval evaluator(game.H, game.W, game.units);
+	game.board.expectedScore = evaluator.calc(game.board.field, 0);
     
 	que.push(game.board);
     
@@ -141,9 +139,9 @@ Result LightningAI::run(){
                         }
                         reverse(commands.begin(), commands.end());
                         nextBoard.commands += commands;
-						nextBoard.expectedScore = i + 1 < game.units.size() ? calc(nextBoard, game.units[i + 1]) : 0;
+						nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
                         queNext.push(nextBoard);
-						if (queNext.size() >= beamWidth - maxVarietySize) {
+						if (queNext.size() > beamWidth - maxVarietySize) {
 							variety.push(make_pair(Util::GetRandom(), queNext.top()));
 							if (variety.size() >= maxVarietySize) variety.pop();
 							queNext.pop();
@@ -193,9 +191,9 @@ Result LightningAI::run(){
                         }
                         reverse(commands.begin(), commands.end());
                         nextBoard.commands += commands;
-						nextBoard.expectedScore = i + 1 < game.units.size() ? calc(nextBoard, game.units[i + 1]) : 0;
+						nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						queNext.push(nextBoard);
-						if (queNext.size() >= beamWidth - maxVarietySize) {
+						if (queNext.size() > beamWidth - maxVarietySize) {
 							variety.push(make_pair(Util::GetRandom(), queNext.top()));
 							if (variety.size() >= maxVarietySize) variety.pop();
 							queNext.pop();
@@ -230,8 +228,8 @@ Result LightningAI::run(){
         que.pop();
     }
     
-    fprintf(stderr, "%d\n", maxScore);
-    fflush(stderr);
+    //fprintf(stderr, "%d\n", maxScore);
+    //fflush(stderr);
     
 	string res = "";
     for (i = 0; i < ans.size(); i++) {

@@ -67,6 +67,7 @@ void init(Unit &unit, int H, int W) {
 //}
 
 Game createGameFromInput() {
+	fprintf(stderr, "waiting input\n");
 	Game game;
 	int &H = game.H, &W = game.W;
 	auto &boardHash = game.boardHash;
@@ -135,5 +136,6 @@ Game createGameFromInput() {
     initBoard.commands = "";
     initBoard.field = field;
     
-    return game;
+	fprintf(stderr, "initializing done\n");
+	return game;
 }
