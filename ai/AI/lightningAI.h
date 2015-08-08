@@ -12,7 +12,7 @@ using namespace std;
 class LightningAI{
 	Game game;
     void update(Board &board, const Point &pivot, int theta, const Unit &unit);
-	string getCommand(const map <pair<Point, int>, int> &parent, Point point, int theta, const string &last);
+	string getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const string &last);
 	void debug(const Board &board);
 	int calc(const Board &board, const Unit &unit);
 public:
