@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void LightningAI::update(Board &board, Point &pivot, int theta, Unit &unit) {
+void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit &unit) {
     int count = 0, point, i, j;
     
     for (i = 0; i < unit.member.size(); i++) {
@@ -40,7 +40,7 @@ void LightningAI::update(Board &board, Point &pivot, int theta, Unit &unit) {
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const string &last) {
+string LightningAI::getCommand(const map <pair<Point, int>, int> &parent, Point point, int theta, const string &last) {
     string commands = last;
     
     while (1) {
@@ -66,7 +66,7 @@ string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point,
     return commands;
 }
 
-void LightningAI::debug(Board &board) {
+void LightningAI::debug(const Board &board) {
     return;
     fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
@@ -92,8 +92,17 @@ Result LightningAI::run(){
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
     
     que.push(game.board);
+
+	int maxVarietySize = beamWidth / 20;
+	auto varietyUpdate = [&](const Board &nextBoard){
+		queNext.push(nextBoard);
+		if (queNext.size() > beamWidth - maxVarietySize) {
+			variety.push(make_pair(Util::GetRandom(), queNext.top()));
+			if (variety.size() >= maxVarietySize) variety.pop();
+			queNext.pop();
+		}
+	};
     
-    int maxVarietySize = beamWidth / 20;
     for (i = 0; i < game.units.size(); i++) {
         set <unsigned long long> states;
         
@@ -145,12 +154,7 @@ Result LightningAI::run(){
                         
                         nextBoard.commands += getCommand(parent, point, theta, Util::commandMove[k]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-                        queNext.push(nextBoard);
-                        if (queNext.size() > beamWidth - maxVarietySize) {
-                            variety.push(make_pair(Util::GetRandom(), queNext.top()));
-                            if (variety.size() >= maxVarietySize) variety.pop();
-                            queNext.pop();
-                        }
+						varietyUpdate(nextBoard);
                     }
                 }
                 
@@ -176,13 +180,8 @@ Result LightningAI::run(){
                         
                         nextBoard.commands += getCommand(parent, point, theta, Util::commandRotate[k + 1]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-                        queNext.push(nextBoard);
-                        if (queNext.size() > beamWidth - maxVarietySize) {
-                            variety.push(make_pair(Util::GetRandom(), queNext.top()));
-                            if (variety.size() >= maxVarietySize) variety.pop();
-                            queNext.pop();
-                        }
-                    }
+						varietyUpdate(nextBoard);
+					}
                 }
             }
         }

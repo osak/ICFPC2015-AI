@@ -137,5 +137,6 @@ Game createGameFromInput() {
     initBoard.field = field;
     
 	fprintf(stderr, "initializing done\n");
+	fflush(stderr);
 	return game;
 }
