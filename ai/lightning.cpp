@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int beamWidth = 1;
+const int beamWidth = 10;
 
 class BitRow {
     public:
@@ -90,6 +90,7 @@ class Unit {
 };
 
 int H, W;
+unsigned int maxUnitSize, minUnitSize;
 int pxx[6] = {1, 1, 0, -1, -1, 0};
 int pxy[6] = {0, 1, 1, 0, -1, -1};
 int pyx[6] = {0, -1, -1, 0, 1, 1};
@@ -245,7 +246,7 @@ struct TestEval{
 
 	int dangerScore(const vector <BitRow> &f) {
 		int sum = 0;
-		for (int x = 0; x < H / 3; ++x) {
+		for (int x = 0; x < H * (1 + (minUnitSize >= 4)) / 3; ++x) {
 			for (int y = 0; y < W; ++y) {
 				if (f[x].get(y)) sum += H - x;
 			}
@@ -254,6 +255,7 @@ struct TestEval{
 	}
 
 	int chanceScore(const vector <BitRow> &f) {
+		if (maxUnitSize <= 1) return 0;
 		int sum = 0;
 		for (int x = 0; x < H; ++x) {
 			int cnt = 0;
@@ -264,24 +266,6 @@ struct TestEval{
 		}
 		return sum;
 	}
-    
-    int chainScore(const vector <BitRow> &f) {
-		return 0;
-        vector<int> vy(H, -1);
-        for (int x = 0; x < H; ++x) {
-            int cnt = 0;
-            for (int y = 0; y < W; ++y) {
-                if (f[x].get(y)) ++cnt;
-                else if (vy[x] == -1) vy[x] = y;
-                else vy[x] = -2;
-            }
-        }
-        int sum = 0;
-        for (int x = 0; x < H - 1; ++x) {
-            if (vy[x] >= 0 && (vy[x] == vy[x + 1] + (x % 2 ? 1 : -1) || vy[x] == vy[x + 1])) sum += 50;
-        }
-        return sum;
-    }
     
     int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
         if (num == source.size()) return 0;
@@ -359,7 +343,8 @@ int main()
     scanf("%d %d", &H, &W);
     scanf("%d", &unitCount);
     
-    for (i = 0; i < unitCount; i++) {
+	maxUnitSize = 0, minUnitSize = 100;
+	for (i = 0; i < unitCount; i++) {
         int count;
         Unit unit;
         
@@ -373,7 +358,9 @@ int main()
             unit.member.push_back(point);
         }
         
-        init(unit);
+		maxUnitSize = max(maxUnitSize, unit.member.size());
+		minUnitSize = min(minUnitSize, unit.member.size());
+		init(unit);
         
         units.push_back(unit);
     }
