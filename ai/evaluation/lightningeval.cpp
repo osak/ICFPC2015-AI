@@ -69,7 +69,7 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 		}
 		if (cnt == W - 1) sum += 150;
 	}
-	return sum * (leftTurn < 10 ? 1 : -1);
+	return sum * (leftTurn > 10 ? 1 : 0);
 }
 
 int LightningEval::calc(vector <BitRow> &field, int num){

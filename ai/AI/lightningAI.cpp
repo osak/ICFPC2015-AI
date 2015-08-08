@@ -71,8 +71,9 @@ void LightningAI::debug(const Board &board) {
     fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < game.H; i++) {
+		if (i % 2) fprintf(stderr, " ");
         for (int j = 0; j < game.W; j++) {
-            fprintf(stderr, "%d", board.field[i].get(j));
+            fprintf(stderr, "%d ", board.field[i].get(j));
         }
         fprintf(stderr, "\n");
     }
