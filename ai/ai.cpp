@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -47,9 +47,9 @@ class BitRow {
         for (int i = 0; i < bits.size(); i++) bits[i] = 0;
     }
     
-    inline int popcount() {
+    inline int popcount() const {
         int cnt = 0;
-        for (auto &b : bits) {
+        for (auto b : bits) {
             #ifdef _MSC_VER
             while (b) ++cnt, b &= b - 1;
             #else
@@ -98,6 +98,7 @@ class Unit {
 };
 
 int H, W;
+int maxUnitSize, minUnitSize;
 int pxx[6] = {1, 1, 0, -1, -1, 0};
 int pxy[6] = {0, 1, 1, 0, -1, -1};
 int pyx[6] = {0, -1, -1, 0, 1, 1};
@@ -213,7 +214,7 @@ bool check(vector <BitRow> &field, Point &pivot, int theta, int num) {
 }
 
 struct TestEval{
-    int holeScore(const vector <BitRow> &ff, const int num) {
+    int holeScore(const vector <BitRow> &ff) {
         auto f = ff;
         Point st;
         st.x = 0, st.y = W / 2; // 雑
@@ -252,13 +253,24 @@ struct TestEval{
     }
 
 	int dangerScore(const vector <BitRow> &f) {
+		int limit = H / 3;
 		int sum = 0;
-		for (int x = 0; x < H / 3; ++x) {
+		for (int x = 0; x < limit; ++x) {
 			for (int y = 0; y < W; ++y) {
 				if (f[x].get(y)) sum += H - x;
 			}
 		}
 		return sum * -200;
+	}
+
+	int oneUnitScore(const vector <BitRow> &f) {
+		int sum = 0;
+		for (int x = 1; x < H; ++x) {
+			int cnt = f[x].popcount();
+			if (cnt) sum += W - cnt;
+		}
+		return -sum*sum*10;
+
 	}
 
 	int chanceScore(const vector <BitRow> &f, int leftTurn) {
@@ -273,35 +285,19 @@ struct TestEval{
 		return sum * (leftTurn < 10 ? 1 : -1);
 	}
     
-    int chainScore(const vector <BitRow> &f) {
-		return 0;
-        vector<int> vy(H, -1);
-        for (int x = 0; x < H; ++x) {
-            int cnt = 0;
-            for (int y = 0; y < W; ++y) {
-                if (f[x].get(y)) ++cnt;
-                else if (vy[x] == -1) vy[x] = y;
-                else vy[x] = -2;
-            }
-        }
-        int sum = 0;
-        for (int x = 0; x < H - 1; ++x) {
-            if (vy[x] >= 0 && (vy[x] == vy[x + 1] + (x % 2 ? 1 : -1) || vy[x] == vy[x + 1])) sum += 50;
-        }
-        return sum;
-    }
-    
     int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
         if (num == source.size()) return 0;
         
         if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-		return holeScore(field, num) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
+		if (maxUnitSize == 1) return oneUnitScore(field);
+		return holeScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
     }
 };
 
 int calc(vector <BitRow> &field, int num) {
     TestEval e;
-    return e.calc(field, num, units, source);
+	int x = e.calc(field, num, units, source);
+    return x;
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
@@ -341,7 +337,7 @@ void update(Board &board, Point &pivot, int theta, int num) {
 }
 
 void debug(Board &board) {
-    return;
+	return;
     fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < H; i++) {
@@ -356,11 +352,15 @@ void debug(Board &board) {
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../../ICFPC2015/cpp_input/problem_4_0.txt", "r", stdin);
+	//freopen("../../ICFPC2015/cpp_input/problem_1_0.txt", "r", stdin);		// 900
+	//freopen("../../ICFPC2015/cpp_input/problem_17_0.txt", "r", stdin);	// 1400
+	//freopen("../../ICFPC2015/cpp_input/problem_19_0.txt", "r", stdin);		// 1300
+	freopen("../../ICFPC2015/cpp_input/problem_21_0.txt", "r", stdin);	// 620
 #endif
 
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
-    string ans = "";
+	maxUnitSize = 0, minUnitSize = 1e9;
+	string ans = "";
     Board initBoard;
     priority_queue <Board> que, queNext;
     
@@ -378,10 +378,12 @@ int main()
             
             scanf("%d %d", &point.y, &point.x);
             
-            unit.member.push_back(point);
-        }
+			unit.member.push_back(point);
+		}
         
-        init(unit);
+		maxUnitSize = max(maxUnitSize, (int)unit.member.size());
+		minUnitSize = min(minUnitSize, (int)unit.member.size());
+		init(unit);
         
         units.push_back(unit);
     }
