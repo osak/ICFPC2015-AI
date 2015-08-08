@@ -1,8 +1,10 @@
-﻿#include "common.h"
-#include "board.h"
-#include "unit.h"
+﻿#pragma once
+
+#include "common.h"
+#include "model/board.h"
+#include "model/unit.h"
+#include "model/game.h"
 #include "util.h"
-#include "game.h"
 
 using namespace std;
 
@@ -51,18 +53,18 @@ void init(Unit &unit, int H, int W) {
     }
 }
 
-void debug(Board &board) {
-	return;
-    fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
-    fprintf(stderr, "%s\n", board.commands.c_str());
-    for (int i = 0; i < H; i++) {
-        for (int j = 0; j < W; j++) {
-            fprintf(stderr, "%d", board.field[i].get(j));
-        }
-        fprintf(stderr, "\n");
-    }
-    fprintf(stderr, "\n");
-}
+//void debug(Board &board) {
+//	return;
+//    fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
+//    fprintf(stderr, "%s\n", board.commands.c_str());
+//    for (int i = 0; i < H; i++) {
+//        for (int j = 0; j < W; j++) {
+//            fprintf(stderr, "%d", board.field[i].get(j));
+//        }
+//        fprintf(stderr, "\n");
+//    }
+//    fprintf(stderr, "\n");
+//}
 
 Game createGameFromInput() {
 	Game game;

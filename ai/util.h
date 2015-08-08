@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "common.h"
-#include "board.h"
-#include "unit.h"
+#include "model/board.h"
+#include "model/unit.h"
 
 using namespace std;
 
@@ -71,7 +71,7 @@ public:
 	}
 
 	// validな配置かチェック
-	static bool check(vector <BitRow> &field, Point &pivot, int theta, Unit &unit) {
+	static bool check(int H, int W, vector <BitRow> &field, Point &pivot, int theta, Unit &unit) {
 		int i;
 
 		for (i = 0; i < unit.member.size(); i++) {
@@ -83,19 +83,3 @@ public:
 	}
 
 };
-
-unsigned Util::x = 123456789;
-unsigned Util::y = 362436039;
-unsigned Util::z = 521288629;
-unsigned Util::w = 88675123;
-
-const int Util::pxx[6] = { 1, 1, 0, -1, -1, 0 };
-const int Util::pxy[6] = { 0, 1, 1, 0, -1, -1 };
-const int Util::pyx[6] = { 0, -1, -1, 0, 1, 1 };
-const int Util::pyy[6] = { 1, 0, -1, -1, 0, 1 };
-const int Util::dx[4] = { 0, 0, 1, 1 };
-const int Util::dy[2][4] = { 1, -1, 0, -1, 1, -1, 1, 0 };
-const int Util::rdx[4] = { 0, 0, -1, -1 };
-const int Util::rdy[2][4] = { -1, 1, -1, 0, -1, 1, 0, 1 };
-const string Util::commandMove[4] = { "E", "W", "D", "S" };
-const string Util::commandRotate[3] = { "X", "", "C" };
