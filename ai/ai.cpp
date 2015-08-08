@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -563,7 +563,10 @@ int main()
     }
     
     while (!que.empty()) {
-        if (que.top().currentScore > maxScore) ans = que.top().commands;
+        if (que.top().currentScore > maxScore) {
+            maxScore = que.top().currentScore;
+            ans = que.top().commands;
+        }
         
         que.pop();
     }
