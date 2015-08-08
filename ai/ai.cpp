@@ -11,6 +11,8 @@
 
 using namespace std;
 
+const int beamWidth = 10;
+
 class BitRow {
     public:
     
@@ -96,7 +98,6 @@ class Unit {
     vector <Point> member;
 };
 
-const int beamWidth = 1;
 int H, W;
 int pxx[6] = {1, 1, 0, -1, -1, 0};
 int pxy[6] = {0, 1, 1, 0, -1, -1};
@@ -220,12 +221,11 @@ struct TestEval{
         
         int distSum = 0;
         if (!f[st.x].get(st.y)) {
-			queue<pair<Point, int>> q;
+			queue<Point> q;
 			f[st.x].set(st.y);
-			q.push(make_pair(st, 1));
+			q.push(st);
 			while (!q.empty()){
-                auto &p = q.front().first;
-                auto &d = q.front().second;
+                auto &p = q.front();
                 q.pop();
                 for (int k = 0; k < 4; ++k) {
                     auto nextPoint = p;
@@ -233,14 +233,13 @@ struct TestEval{
                     nextPoint.y += dy[p.x % 2][k];
                     if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x].get(nextPoint.y)) continue;
                     f[nextPoint.x].set(nextPoint.y);
-                    distSum += d;
-                    q.push(make_pair(nextPoint, d + 1));
+                    q.push(nextPoint);
                 }
             }
         }
         int holeCnt = 0;
         for (auto &v : f) holeCnt += W - v.popcount();
-        return holeCnt * -5 + distSum * -0.3;
+        return holeCnt * -5;
     }
     
     int heightScore(const vector <BitRow> &f) {
@@ -252,6 +251,18 @@ struct TestEval{
         }
         return -sum;
     }
+
+	int chanceScore(const vector <BitRow> &f) {
+		int sum = 0;
+		for (int x = 0; x < H; ++x) {
+			int cnt = 0;
+			for (int y = 0; y < W; ++y) {
+				if (f[x].get(y)) ++cnt;
+			}
+			if (cnt == W - 1) sum += 150;
+		}
+		return sum;
+	}
     
     int chainScore(const vector <BitRow> &f) {
 		return 0;
@@ -275,7 +286,7 @@ struct TestEval{
         if (num == source.size()) return 0;
         
         if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-        return holeScore(field, num) + heightScore(field) + chainScore(field);
+		return holeScore(field, num) + heightScore(field) + chanceScore(field);
     }
 };
 
@@ -336,7 +347,7 @@ void debug(Board &board) {
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../cpp_input/problem_0_0.txt", "r", stdin);
+	freopen("../../ICFPC2015/cpp_input/problem_0_0.txt", "r", stdin);
 #endif
 
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
