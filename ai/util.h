@@ -36,7 +36,7 @@ public:
 	}
 
 	// pivot からの相対座標に対する絶対座標を求める
-	static Point get(Point &pivot, int x, int y) {
+	static Point get(const Point &pivot, int x, int y) {
 		Point point;
 
 		point.x = pivot.x + x;
@@ -61,7 +61,7 @@ public:
 	}
 
 	// pivot と回転角から point の絶対座標を求める
-	static Point get(Point &pivot, int theta, Point &point) {
+	static Point get(const Point &pivot, int theta, const Point &point) {
 		int px, py;
 
 		px = pxx[theta] * point.x + pxy[theta] * point.y;
@@ -71,7 +71,7 @@ public:
 	}
 
 	// validな配置かチェック
-	static bool check(int H, int W, vector <BitRow> &field, Point &pivot, int theta, Unit &unit) {
+	static bool check(int H, int W, const vector <BitRow> &field, const Point &pivot, int theta, const Unit &unit) {
 		int i;
 
 		for (i = 0; i < unit.member.size(); i++) {
