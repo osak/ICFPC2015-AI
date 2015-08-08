@@ -258,7 +258,7 @@ struct TestEval{
 				if (f[x].get(y)) sum += H - x;
 			}
 		}
-		return sum * -20;
+		return sum * -200;
 	}
 
 	int chanceScore(const vector <BitRow> &f) {
@@ -356,7 +356,7 @@ void debug(Board &board) {
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../../ICFPC2015/cpp_input/problem_10_0.txt", "r", stdin);
+	freopen("../../ICFPC2015/cpp_input/problem_23_0.txt", "r", stdin);
 #endif
 
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
