@@ -1,3 +1,5 @@
+﻿#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -42,6 +44,18 @@ class BitRow {
     inline void clear(void) {
         for (int i = 0; i < bits.size(); i++) bits[i] = 0;
     }
+
+	inline int popcount() {
+		int cnt = 0;
+		for (auto &b : bits) {
+#ifdef _MSC_VER
+			while (b) ++cnt, b &= b - 1;
+#else
+			cnt += __builtin_popcountll(b);
+#endif
+		}
+		return cnt;
+	}
 };
 
 class Board {
@@ -58,7 +72,7 @@ class Board {
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
         if (previousLine != b.previousLine) return previousLine < b.previousLine;
         if (commands != b.commands) return commands < b.commands;
-        return false;
+        return true;
     }
 };
 
@@ -182,34 +196,33 @@ bool check(vector <BitRow> &field, Point &pivot, int theta, int num) {
 
 struct TestEval{
 	int holeScore(const vector <BitRow> &ff, const int num) {
-        return 0;
-        /*
 		auto f = ff;
 		Point st;
 		st.x = 0, st.y = W / 2; // 雑
 
-		queue<Point> q;
-		q.push(st);
+		queue<pair<Point, int>> q;
+		q.push(make_pair(st, 1));
 		int distSum = 0;
-		if (!f[st.x][st.y]) {
-			f[st.x][st.y] = 1;
+		if (!f[st.x].get(st.y)) {
+			f[st.x].set(st.y);
 			while (!q.empty()){
-				auto &p = q.front();
+				auto &p = q.front().first;
+				auto &d = q.front().second;
 				q.pop();
 				for (int k = 0; k < 4; ++k) {
 					auto nextPoint = p;
 					nextPoint.x += dx[k];
 					nextPoint.y += dy[p.x % 2][k];
-					if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x][nextPoint.y]) continue;
-					f[nextPoint.x][nextPoint.y] = f[st.x][st.y] + 1;
-					distSum += f[st.x][st.y];
+					if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x].get(nextPoint.y)) continue;
+					f[nextPoint.x].set(nextPoint.y);
+					distSum += d;
+					q.push(make_pair(nextPoint, d + 1));
 				}
 			}
 		}
 		int holeCnt = 0;
-		for (auto &v : f) for (auto & e : v) if (!e) ++holeCnt;
+		for (auto &v : f) holeCnt += v.popcount();
 		return holeCnt * -5 + distSum * 0.3;
-        */
 	}
     
 	int heightScore(const vector <BitRow> &f) {
@@ -222,17 +235,28 @@ struct TestEval{
 		return sum;
 	}
 
-	int distScore(const vector <BitRow> &ff) {
-		auto f = ff;
-
+	int chainScore(const vector <BitRow> &f) {
+		vector<int> vy(H, -1);
+		for (int x = 0; x < H; ++x) {
+			int cnt = 0;
+			for (int y = 0; y < W; ++y) {
+				if (f[x].get(y)) ++cnt;
+				else if (vy[x] == -1) vy[x] = y;
+				else vy[x] = -2;
+			}
+		}
+		int sum = 0;
+		for (int x = 0; x < H - 1; ++x) {
+			if (vy[x] >= 0 && (vy[x] == vy[x + 1] + (x % 2 ? 1 : -1) || vy[x] == vy[x + 1])) sum += 50;
+		}
+		return sum;
 	}
-
 
 	int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
 		if (num == source.size()) return 0;
 
 		if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-		return holeScore(field, num) + heightScore(field);
+		return holeScore(field, num) + heightScore(field) + chainScore(field);
 	}
 };
 
