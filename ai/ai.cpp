@@ -1,4 +1,4 @@
-﻿#include <cstdio>
+#include <cstdio>
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -138,6 +138,7 @@ bool check(vector <vector <int> > &field, Point &pivot, int theta, int num) {
 struct TestEval{
 	int holeScore(const vector <vector <int> > &ff, const int num) {
 		auto f = ff;
+        int h = f.size();
 		int w = f.back().size();
 		Point st;
 		st.x = 0, st.y = w / 2; // 雑
