@@ -9,6 +9,41 @@
 
 using namespace std;
 
+class BitRow {
+    public:
+    
+    vector <unsigned long long> bits;
+    
+    BitRow(int size) : bits((size + 63) / 64) {
+    }
+    
+    inline int get(int index) const {
+        return (bits[index / 64] >> (index % 64)) & 1;
+    }
+    
+    inline void set(int index) {
+        bits[index / 64] |= (1ULL << (index % 64));
+    }
+    
+    inline bool check(int width) const {
+        int i;
+        
+        for (i = 0; i < width / 64; i++) {
+            if (bits[i] != ~0ULL) return false;
+        }
+        
+        if (i < bits.size()) {
+            if (bits[i] != (1ULL << (width % 64)) - 1) return false;
+        }
+        
+        return true;
+    }
+    
+    inline void clear(void) {
+        for (int i = 0; i < bits.size(); i++) bits[i] = 0;
+    }
+};
+
 class Board {
     public:
     
@@ -16,14 +51,14 @@ class Board {
     int previousLine;
     int expectedScore;
     string commands;
-    vector <vector <int> > field;
+    vector <BitRow> field;
     
     bool operator<(const Board &b) const {
         if (currentScore + expectedScore != b.currentScore + b.expectedScore) return currentScore + expectedScore < b.currentScore + b.expectedScore;
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
         if (previousLine != b.previousLine) return previousLine < b.previousLine;
         if (commands != b.commands) return commands < b.commands;
-        if (field != b.field) return field < b.field;
+        return false;
     }
 };
 
@@ -134,23 +169,24 @@ Point get(Point &pivot, int theta, Point &point) {
     return get(pivot, px, py);
 }
 
-bool check(vector <vector <int> > &field, Point &pivot, int theta, int num) {
+bool check(vector <BitRow> &field, Point &pivot, int theta, int num) {
     int i;
     
     for (i = 0; i < units[source[num]].member.size(); i++) {
         Point p = get(pivot, theta, units[source[num]].member[i]);
-        if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x][p.y] == 1) return false;
+        if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x].get(p.y) == 1) return false;
     }
     
     return true;
 }
 
 struct TestEval{
-	int holeScore(const vector <vector <int> > &ff, const int num) {
+	int holeScore(const vector <BitRow> &ff, const int num) {
+        return 0;
+        /*
 		auto f = ff;
-		int h = f.size(), w = f.back().size();
 		Point st;
-		st.x = 0, st.y = w / 2; // 雑
+		st.x = 0, st.y = W / 2; // 雑
 
 		queue<Point> q;
 		q.push(st);
@@ -164,7 +200,7 @@ struct TestEval{
 					auto nextPoint = p;
 					nextPoint.x += dx[k];
 					nextPoint.y += dy[p.x % 2][k];
-					if (nextPoint.x < 0 || nextPoint.x >= h || nextPoint.y < 0 || nextPoint.y >= w || f[nextPoint.x][nextPoint.y]) continue;
+					if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x][nextPoint.y]) continue;
 					f[nextPoint.x][nextPoint.y] = f[st.x][st.y] + 1;
 					distSum += f[st.x][st.y];
 				}
@@ -173,26 +209,26 @@ struct TestEval{
 		int holeCnt = 0;
 		for (auto &v : f) for (auto & e : v) if (!e) ++holeCnt;
 		return holeCnt * -5 + distSum * 0.3;
+        */
 	}
-
-	int heightScore(const vector <vector <int> > &f) {
-		int h = f.size(), w = f.back().size();
+    
+	int heightScore(const vector <BitRow> &f) {
 		int sum = 0;
-		for (int x = 0; x < h; ++x) {
-			for (int y = 0; y < w; ++y) {
-				if (f[x][y]) sum -= h - x;
+		for (int x = 0; x < H; ++x) {
+			for (int y = 0; y < W; ++y) {
+				if (f[x].get(y)) sum -= H - x;
 			}
 		}
 		return sum;
 	}
 
-	int distScore(const vector <vector <int> > &ff) {
+	int distScore(const vector <BitRow> &ff) {
 		auto f = ff;
 
 	}
 
 
-	int calc(vector <vector <int> > &field, int num, vector<Unit> &units, vector<int> &source){
+	int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
 		if (num == source.size()) return 0;
 
 		if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
@@ -200,38 +236,29 @@ struct TestEval{
 	}
 };
 
-int calc(vector <vector <int> > &field, int num) {
+int calc(vector <BitRow> &field, int num) {
 	TestEval e;
 	return e.calc(field, num, units, source);
-
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
-    int count = 0, point, i, j;
+    int count = 0, point, i;
     
     for (i = 0; i < units[source[num]].member.size(); i++) {
         Point p = get(pivot, theta, units[source[num]].member[i]);
         
-        board.field[p.x][p.y] = 1;
+        board.field[p.x].set(p.y);
     }
     
     for (i = H - 1; i >= 0; i--) {
-        for (j = 0; j < W; j++) {
-            if (board.field[i][j] == 0) break;
-        }
-        
-        if (j == W) {
+        if (board.field[i].check(W)) {
             count++;
         } else {
             board.field[i + count] = board.field[i];
         }
     }
     
-    for (i = 0; i < count; i++) {
-        for (j = 0; j < W; j++) {
-            board.field[i][j] = 0;
-        }
-    }
+    for (i = 0; i < count; i++) board.field[i].clear();
     
     point = units[source[num]].member.size() + 100 * (1 + count) * count / 2;
     board.currentScore += point;
@@ -244,7 +271,7 @@ void debug(Board &board) {
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < H; i++) {
         for (int j = 0; j < W; j++) {
-            fprintf(stderr, "%d", board.field[i][j]);
+            fprintf(stderr, "%d", board.field[i].get(j));
         }
         fprintf(stderr, "\n");
     }
@@ -280,7 +307,7 @@ int main()
         units.push_back(unit);
     }
     
-    vector <vector <int> > field(H, vector <int>(W, 0));
+    vector <BitRow> field(H, BitRow(W));
     
     scanf("%d", &fieldCount);
     
@@ -289,7 +316,7 @@ int main()
         
         scanf("%d %d", &y, &x);
         
-        field[x][y] = 1;
+        field[x].set(y);
     }
     
     scanf("%d", &sourceLength);
