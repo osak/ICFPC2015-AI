@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const int beamWidth = 10;
+//const int beamWidth = 1000;
 
 class BitRow {
     public:
@@ -74,6 +74,9 @@ class Board {
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
         if (previousLine != b.previousLine) return previousLine < b.previousLine;
         return hash < b.hash;
+    }
+    bool operator>(const Board &b) const {
+		 return b < *this;
     }
 };
 
@@ -365,6 +368,7 @@ int main()
     
     scanf("%d %d", &H, &W);
     scanf("%d", &unitCount);
+	 int beamWidth = 10000 / H / W;
     
     for (i = 0; i < unitCount; i++) {
         int count;
