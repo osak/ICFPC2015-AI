@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -218,12 +218,12 @@ struct TestEval{
         Point st;
         st.x = 0, st.y = W / 2; // 雑
         
-        queue<pair<Point, int>> q;
-        q.push(make_pair(st, 1));
         int distSum = 0;
         if (!f[st.x].get(st.y)) {
-            f[st.x].set(st.y);
-            while (!q.empty()){
+			queue<pair<Point, int>> q;
+			f[st.x].set(st.y);
+			q.push(make_pair(st, 1));
+			while (!q.empty()){
                 auto &p = q.front().first;
                 auto &d = q.front().second;
                 q.pop();
@@ -239,22 +239,22 @@ struct TestEval{
             }
         }
         int holeCnt = 0;
-        for (auto &v : f) holeCnt += v.popcount();
-        return holeCnt * -5 + distSum * 0.3;
+        for (auto &v : f) holeCnt += W - v.popcount();
+        return holeCnt * -5 + distSum * -0.3;
     }
     
     int heightScore(const vector <BitRow> &f) {
         int sum = 0;
         for (int x = 0; x < H; ++x) {
             for (int y = 0; y < W; ++y) {
-                if (f[x].get(y)) sum -= H - x;
+                if (f[x].get(y)) sum += H - x;
             }
         }
-        return sum;
+        return -sum;
     }
     
     int chainScore(const vector <BitRow> &f) {
-        return 0;
+		return 0;
         vector<int> vy(H, -1);
         for (int x = 0; x < H; ++x) {
             int cnt = 0;
@@ -335,6 +335,10 @@ void debug(Board &board) {
 
 int main()
 {
+#ifdef _MSC_VER
+	freopen("../cpp_input/problem_0_0.txt", "r", stdin);
+#endif
+
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
     string ans = "";
     Board initBoard;
