@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -44,18 +44,18 @@ class BitRow {
     inline void clear(void) {
         for (int i = 0; i < bits.size(); i++) bits[i] = 0;
     }
-
-	inline int popcount() {
-		int cnt = 0;
-		for (auto &b : bits) {
-#ifdef _MSC_VER
-			while (b) ++cnt, b &= b - 1;
-#else
-			cnt += __builtin_popcountll(b);
-#endif
-		}
-		return cnt;
-	}
+    
+    inline int popcount() {
+        int cnt = 0;
+        for (auto &b : bits) {
+            #ifdef _MSC_VER
+            while (b) ++cnt, b &= b - 1;
+            #else
+            cnt += __builtin_popcountll(b);
+            #endif
+        }
+        return cnt;
+    }
 };
 
 class Board {
@@ -64,6 +64,7 @@ class Board {
     int currentScore;
     int previousLine;
     int expectedScore;
+    unsigned long long hash;
     string commands;
     vector <BitRow> field;
     
@@ -72,7 +73,7 @@ class Board {
         if (currentScore != b.currentScore) return currentScore < b.currentScore;
         if (previousLine != b.previousLine) return previousLine < b.previousLine;
         if (commands != b.commands) return commands < b.commands;
-        return true;
+        return hash < b.hash;
     }
 };
 
@@ -105,10 +106,27 @@ int dx[4] = {0, 0, 1, 1};
 int dy[2][4] = {1, -1, 0, -1, 1, -1, 1, 0};
 int rdx[4] = {0, 0, -1, -1};
 int rdy[2][4] = {-1, 1, -1, 0, -1, 1, 0, 1};
-string commandMove[4] = {"E", "W", "ES", "WS"};
-string commandRotate[3] = {"WCC", "", "WC"};
+string commandMove[4] = {"E", "W", "D", "S"};
+string commandRotate[3] = {"X", "", "C"};
 vector <Unit> units;
 vector <int> source;
+vector <vector <unsigned long long> > boardHash;
+
+unsigned GetRandom(void) {
+    static unsigned x = 123456789;
+    static unsigned y = 362436039;
+    static unsigned z = 521288629;
+    static unsigned w = 88675123;
+    unsigned t;
+    
+    t = x ^ (x << 11);
+    x = y;
+    y = z;
+    z = w;
+    w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
+    
+    return w;
+}
 
 // pivot からの相対座標に対する絶対座標を求める
 Point get(Point &pivot, int x, int y) {
@@ -195,83 +213,85 @@ bool check(vector <BitRow> &field, Point &pivot, int theta, int num) {
 }
 
 struct TestEval{
-	int holeScore(const vector <BitRow> &ff, const int num) {
-		auto f = ff;
-		Point st;
-		st.x = 0, st.y = W / 2; // 雑
-
-		queue<pair<Point, int>> q;
-		q.push(make_pair(st, 1));
-		int distSum = 0;
-		if (!f[st.x].get(st.y)) {
-			f[st.x].set(st.y);
-			while (!q.empty()){
-				auto &p = q.front().first;
-				auto &d = q.front().second;
-				q.pop();
-				for (int k = 0; k < 4; ++k) {
-					auto nextPoint = p;
-					nextPoint.x += dx[k];
-					nextPoint.y += dy[p.x % 2][k];
-					if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x].get(nextPoint.y)) continue;
-					f[nextPoint.x].set(nextPoint.y);
-					distSum += d;
-					q.push(make_pair(nextPoint, d + 1));
-				}
-			}
-		}
-		int holeCnt = 0;
-		for (auto &v : f) holeCnt += v.popcount();
-		return holeCnt * -5 + distSum * 0.3;
-	}
+    int holeScore(const vector <BitRow> &ff, const int num) {
+        auto f = ff;
+        Point st;
+        st.x = 0, st.y = W / 2; // 雑
+        
+        queue<pair<Point, int>> q;
+        q.push(make_pair(st, 1));
+        int distSum = 0;
+        if (!f[st.x].get(st.y)) {
+            f[st.x].set(st.y);
+            while (!q.empty()){
+                auto &p = q.front().first;
+                auto &d = q.front().second;
+                q.pop();
+                for (int k = 0; k < 4; ++k) {
+                    auto nextPoint = p;
+                    nextPoint.x += dx[k];
+                    nextPoint.y += dy[p.x % 2][k];
+                    if (nextPoint.x < 0 || nextPoint.x >= H || nextPoint.y < 0 || nextPoint.y >= W || f[nextPoint.x].get(nextPoint.y)) continue;
+                    f[nextPoint.x].set(nextPoint.y);
+                    distSum += d;
+                    q.push(make_pair(nextPoint, d + 1));
+                }
+            }
+        }
+        int holeCnt = 0;
+        for (auto &v : f) holeCnt += v.popcount();
+        return holeCnt * -5 + distSum * 0.3;
+    }
     
-	int heightScore(const vector <BitRow> &f) {
-		int sum = 0;
-		for (int x = 0; x < H; ++x) {
-			for (int y = 0; y < W; ++y) {
-				if (f[x].get(y)) sum -= H - x;
-			}
-		}
-		return sum;
-	}
-
-	int chainScore(const vector <BitRow> &f) {
-		vector<int> vy(H, -1);
-		for (int x = 0; x < H; ++x) {
-			int cnt = 0;
-			for (int y = 0; y < W; ++y) {
-				if (f[x].get(y)) ++cnt;
-				else if (vy[x] == -1) vy[x] = y;
-				else vy[x] = -2;
-			}
-		}
-		int sum = 0;
-		for (int x = 0; x < H - 1; ++x) {
-			if (vy[x] >= 0 && (vy[x] == vy[x + 1] + (x % 2 ? 1 : -1) || vy[x] == vy[x + 1])) sum += 50;
-		}
-		return sum;
-	}
-
-	int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
-		if (num == source.size()) return 0;
-
-		if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-		return holeScore(field, num) + heightScore(field) + chainScore(field);
-	}
+    int heightScore(const vector <BitRow> &f) {
+        int sum = 0;
+        for (int x = 0; x < H; ++x) {
+            for (int y = 0; y < W; ++y) {
+                if (f[x].get(y)) sum -= H - x;
+            }
+        }
+        return sum;
+    }
+    
+    int chainScore(const vector <BitRow> &f) {
+        return 0;
+        vector<int> vy(H, -1);
+        for (int x = 0; x < H; ++x) {
+            int cnt = 0;
+            for (int y = 0; y < W; ++y) {
+                if (f[x].get(y)) ++cnt;
+                else if (vy[x] == -1) vy[x] = y;
+                else vy[x] = -2;
+            }
+        }
+        int sum = 0;
+        for (int x = 0; x < H - 1; ++x) {
+            if (vy[x] >= 0 && (vy[x] == vy[x + 1] + (x % 2 ? 1 : -1) || vy[x] == vy[x + 1])) sum += 50;
+        }
+        return sum;
+    }
+    
+    int calc(vector <BitRow> &field, int num, vector<Unit> &units, vector<int> &source){
+        if (num == source.size()) return 0;
+        
+        if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
+        return holeScore(field, num) + heightScore(field) + chainScore(field);
+    }
 };
 
 int calc(vector <BitRow> &field, int num) {
-	TestEval e;
-	return e.calc(field, num, units, source);
+    TestEval e;
+    return e.calc(field, num, units, source);
 }
 
 void update(Board &board, Point &pivot, int theta, int num) {
-    int count = 0, point, i;
+    int count = 0, point, i, j;
     
     for (i = 0; i < units[source[num]].member.size(); i++) {
         Point p = get(pivot, theta, units[source[num]].member[i]);
         
         board.field[p.x].set(p.y);
+        board.hash ^= boardHash[p.x][p.y];
     }
     
     for (i = H - 1; i >= 0; i--) {
@@ -284,6 +304,16 @@ void update(Board &board, Point &pivot, int theta, int num) {
     
     for (i = 0; i < count; i++) board.field[i].clear();
     
+    if (count > 0) {
+        board.hash = 0;
+        
+        for (i = count; i < H; i++) {
+            for (j = 0; j < W; j++) {
+                if (board.field[i].get(j)) board.hash ^= boardHash[i][j];
+            }
+        }
+    }
+    
     point = units[source[num]].member.size() + 100 * (1 + count) * count / 2;
     board.currentScore += point;
     if (board.previousLine > 1) board.currentScore += (board.previousLine - 1) * point / 10;
@@ -291,6 +321,7 @@ void update(Board &board, Point &pivot, int theta, int num) {
 }
 
 void debug(Board &board) {
+    return;
     fprintf(stderr, "%d %d\n", board.currentScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < H; i++) {
@@ -333,6 +364,14 @@ int main()
     
     vector <BitRow> field(H, BitRow(W));
     
+    boardHash.resize(H);
+    for (i = 0; i < H; i++) {
+        boardHash[i].resize(W);
+        for (j = 0; j < W; j++) boardHash[i][j] = ((unsigned long long)GetRandom() << 32) | GetRandom();
+    }
+    
+    initBoard.hash = 0;
+    
     scanf("%d", &fieldCount);
     
     for (i = 0; i < fieldCount; i++) {
@@ -341,6 +380,7 @@ int main()
         scanf("%d %d", &y, &x);
         
         field[x].set(y);
+        initBoard.hash ^= boardHash[x][y];
     }
     
     scanf("%d", &sourceLength);
@@ -361,10 +401,11 @@ int main()
     que.push(initBoard);
     
     for (i = 0; i < source.size(); i++) {
+        set <unsigned long long> states;
+        
         for (j = 0; j < beamWidth && !que.empty(); j++) {
             Board board = que.top();
             queue <pair<Point, int> > queBFS;
-            set <Board> states;
             map <pair<Point, int>, int> parent;
             
             que.pop();
@@ -406,8 +447,8 @@ int main()
                         
                         update(nextBoard, point, theta, i);
                         
-                        if (states.count(nextBoard)) continue;
-                        states.insert(nextBoard);
+                        if (states.count(nextBoard.hash)) continue;
+                        states.insert(nextBoard.hash);
                         
                         Point nowPoint = point;
                         int nowTheta = theta;
@@ -453,8 +494,8 @@ int main()
                         
                         update(nextBoard, point, theta, i);
                         
-                        if (states.count(nextBoard)) continue;
-                        states.insert(nextBoard);
+                        if (states.count(nextBoard.hash)) continue;
+                        states.insert(nextBoard.hash);
                         
                         Point nowPoint = point;
                         int nowTheta = theta;
@@ -506,29 +547,26 @@ int main()
     fprintf(stderr, "%d\n", maxScore);
     fflush(stderr);
     
-    for (i = 0; i < ans.size();) {
-        if (ans[i] == 'C') {
-            if (ans[i + 1] == 'C') {
-                putchar('k');
-                i += 3;
-            } else {
-                putchar('d');
-                i += 2;
-            }
-        } else if (ans[i] == 'S') {
-            if (ans[i + 1] == 'W') {
-                putchar('a');
-            } else {
-                putchar('l');
-            }
-            i += 2;
-        } else {
-            if (ans[i] == 'W') {
-                putchar('p');
-            } else {
-                putchar('b');
-            }
-            i++;
+    for (i = 0; i < ans.size(); i++) {
+        switch (ans[i]) {
+            case 'W':
+            putchar('p');
+            break;
+            case 'E':
+            putchar('b');
+            break;
+            case 'D':
+            putchar('l');
+            break;
+            case 'S':
+            putchar('a');
+            break;
+            case 'X':
+            putchar('k');
+            break;
+            case 'C':
+            putchar('d');
+            break;
         }
     }
     
