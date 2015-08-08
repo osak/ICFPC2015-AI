@@ -1,5 +1,4 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
-
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -362,7 +361,7 @@ int main()
 	maxUnitSize = 0, minUnitSize = 1e9;
 	string ans = "";
     Board initBoard;
-    priority_queue <Board> que, queNext;
+    priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     
     scanf("%d %d", &H, &W);
     scanf("%d", &unitCount);
@@ -426,6 +425,8 @@ int main()
     
     que.push(initBoard);
     
+	priority_queue <pair <unsigned, Board> > variety;
+	int maxVarietySize = beamWidth / 20;
     for (i = 0; i < source.size(); i++) {
         set <unsigned long long> states;
         
@@ -500,6 +501,11 @@ int main()
                         nextBoard.commands += commands;
                         nextBoard.expectedScore = calc(nextBoard.field, i + 1);
                         queNext.push(nextBoard);
+						if (queNext.size() >= beamWidth - maxVarietySize) {
+							variety.push(make_pair(GetRandom(), queNext.top()));
+							if (variety.size() >= maxVarietySize) variety.pop();
+							queNext.pop();
+						}
                     }
                 }
                 
@@ -547,6 +553,11 @@ int main()
                         nextBoard.commands += commands;
                         nextBoard.expectedScore = calc(nextBoard.field, i + 1);
                         queNext.push(nextBoard);
+						if (queNext.size() >= beamWidth - maxVarietySize) {
+							variety.push(make_pair(GetRandom(), queNext.top()));
+							if (variety.size() >= maxVarietySize) variety.pop();
+							queNext.pop();
+						}
                     }
                 }
             }
@@ -561,7 +572,11 @@ int main()
             que.pop();
         }
         
-        swap(que, queNext);
+		while (!variety.empty()) {
+			queNext.push(variety.top().second);
+			variety.pop();
+		}
+		swap(que, queNext);
     }
     
     while (!que.empty()) {
