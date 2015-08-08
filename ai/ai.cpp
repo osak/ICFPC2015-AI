@@ -88,10 +88,20 @@ void init(Unit &unit) {
     int topx = 1e9, lefty = 1e9, righty = 1e9, i;
     
     for (i = 0; i < unit.member.size(); i++) {
+        int x = unit.member[i].x - unit.pivot.x;
+        
         if (unit.pivot.x % 2 == 0) {
-            unit.member[i].y = unit.member[i].y - unit.pivot.y - (unit.member[i].x - unit.pivot.x - 1) / 2;
+            if (x > 0) {
+                unit.member[i].y = unit.member[i].y - unit.pivot.y - x / 2;
+            } else {
+                unit.member[i].y = unit.member[i].y - unit.pivot.y - (x - 1) / 2;
+            }
         } else {
-            unit.member[i].y = unit.member[i].y - unit.pivot.y - (unit.member[i].x - unit.pivot.x + 1) / 2;
+            if (x > 0) {
+                unit.member[i].y = unit.member[i].y - unit.pivot.y - (x + 1) / 2;
+            } else {
+                unit.member[i].y = unit.member[i].y - unit.pivot.y - x / 2;
+            }
         }
         
         topx = min(topx, unit.member[i].x);
