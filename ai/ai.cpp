@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
 #include <cstdlib>
@@ -251,6 +251,16 @@ struct TestEval{
         return -sum;
     }
 
+	int dangerScore(const vector <BitRow> &f) {
+		int sum = 0;
+		for (int x = 0; x < H / 3; ++x) {
+			for (int y = 0; y < W; ++y) {
+				if (f[x].get(y)) sum += H - x;
+			}
+		}
+		return sum * -20;
+	}
+
 	int chanceScore(const vector <BitRow> &f) {
 		int sum = 0;
 		for (int x = 0; x < H; ++x) {
@@ -285,7 +295,7 @@ struct TestEval{
         if (num == source.size()) return 0;
         
         if (!check(field, units[source[num]].pivot, 0, num)) return -1e9;
-		return holeScore(field, num) + heightScore(field) + chanceScore(field);
+		return holeScore(field, num) + heightScore(field) + chanceScore(field) + dangerScore(field);
     }
 };
 
@@ -346,7 +356,7 @@ void debug(Board &board) {
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../../ICFPC2015/cpp_input/problem_0_0.txt", "r", stdin);
+	freopen("../../ICFPC2015/cpp_input/problem_10_0.txt", "r", stdin);
 #endif
 
     int unitCount, fieldCount, sourceLength, maxScore = -1, i, j, k;
