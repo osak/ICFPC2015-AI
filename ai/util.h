@@ -72,9 +72,9 @@ public:
 
 	// validな配置かチェック
 	static bool check(int H, int W, const vector <BitRow> &field, const Point &pivot, int theta, const Unit &unit) {
-		int i;
+		int i, size = (int) unit.member.size();
 
-		for (i = 0; i < unit.member.size(); i++) {
+		for (i = 0; i < size; i++) {
 			Point p = get(pivot, theta, unit.member[i]);
 			if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x].test(p.y)) return false;
 		}

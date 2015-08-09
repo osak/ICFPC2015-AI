@@ -40,7 +40,7 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const char last) {
+string LightningAI::getCommand(const ParentTable &parent, Point point, int theta, const char last) {
     string commands(1, last);
 
     while (1) {
@@ -83,14 +83,13 @@ void LightningAI::debug(const Board &board) {
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 10;
+    int beamWidth = 170;
     string ans = "";
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
     queue <pair<Point, int> > queBFS;
 
-    map <pair<Point, int>, int> parent;
-    parent.set_empty_key(make_pair(Point(), 1 << 31));
+    ParentTable parent;
 
     LightningEval evaluator(game.H, game.W, game.units);
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
