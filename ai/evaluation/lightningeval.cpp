@@ -10,7 +10,8 @@ int LightningEval::kawateaScore(const vector <BitRow> &f) {
 		return cnt;
 	};
 #endif
-	int sum = 0, a = f[0].bits[0];
+	unsigned long long a = f[0].bits[0];
+    int sum = 0;
 	for (int x = 0; x < H - 1; ++x) {
 		auto b = f[x + 1].bits[0];
 		if(x%2 == 0) sum += __builtin_popcountll(a & (a >> 1) & (~b));
@@ -24,7 +25,7 @@ int LightningEval::kawateaScore(const vector <BitRow> &f) {
 int LightningEval::heightScore(const vector <BitRow> &f) {
 	int sum = 0;
 	for (int x = 0; x < H; ++x) {
-		sum += (H - x) * f[x].popcount();
+		sum += (H - x) * f[x].count();
 	}
 	return -sum;
 }
@@ -33,7 +34,7 @@ int LightningEval::dangerScore(const vector <BitRow> &f) {
 	int limit = H / 3;
 	int sum = 0;
 	for (int x = 0; x < limit; ++x) {
-		sum += f[x].popcount() * (H - x);
+		sum += f[x].count() * (H - x);
 	}
 	return sum * -200;
 }
@@ -41,7 +42,7 @@ int LightningEval::dangerScore(const vector <BitRow> &f) {
 int LightningEval::oneUnitScore(const vector <BitRow> &f) {
 	int sum = 0;
 	for (int x = 1; x < H; ++x) {
-		int cnt = f[x].popcount();
+		int cnt = f[x].count();
 		if (cnt) sum += W - cnt;
 	}
 	return -sum*sum * 10;
@@ -51,7 +52,7 @@ int LightningEval::oneUnitScore(const vector <BitRow> &f) {
 int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 	int sum = 0;
 	for (int x = 0; x < H; ++x) {
-		if (f[x].popcount() == W - 1) sum += 150;
+		if (f[x].count() == W - 1) sum += 150;
 	}
 	return sum * (leftTurn > 10 ? 1 : 0);
 }
