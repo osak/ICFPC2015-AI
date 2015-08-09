@@ -8,9 +8,10 @@
 #include "../common.h"
 #include "unit.h"
 
-const int MAX_BOARD_SIZE = 300;
 class Table {
-    std::pair<int, int> table[MAX_BOARD_SIZE+1][MAX_BOARD_SIZE+1][6];
+    const int MAX_BOARD_SIZE = 300;
+    const int MARGIN = 100;
+    std::pair<int, int> table[MAX_BOARD_SIZE+MARGIN][MAX_BOARD_SIZE+MARGIN][6];
     int turn;
 
 public:
@@ -27,17 +28,17 @@ public:
 
     int operator[](const std::pair<Point, int> &key) const {
         // Here assumes given key is **valid** one; must be already inserted.
-        return table[key.first.x+1][key.first.y+1][key.second].second;
+        return table[key.first.x+MARGIN][key.first.y+MARGIN][key.second].second;
     }
 
     int& operator[](const std::pair<Point, int> &key) {
         // Here assumes value always to be set when caller requires lvalue.
-        table[key.first.x+1][key.first.y+1][key.second].first = turn;
-        return table[key.first.x+1][key.first.y+1][key.second].second;
+        table[key.first.x+MARGIN][key.first.y+MARGIN][key.second].first = turn;
+        return table[key.first.x+MARGIN][key.first.y+MARGIN][key.second].second;
     }
 
     bool count(const std::pair<Point, int> &key) const {
-        return table[key.first.x+1][key.first.y+1][key.second].first == turn;
+        return table[key.first.x+MARGIN][key.first.y+MARGIN][key.second].first == turn;
     }
 
     void clear() {
