@@ -8,9 +8,9 @@
 #include "../common.h"
 #include "unit.h"
 
+const int MAX_BOARD_SIZE = 300;
+const int MARGIN = 100;
 class Table {
-    const int MAX_BOARD_SIZE = 300;
-    const int MARGIN = 100;
     std::pair<int, int> table[MAX_BOARD_SIZE+MARGIN][MAX_BOARD_SIZE+MARGIN][6];
     int turn;
 
