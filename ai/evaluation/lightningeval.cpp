@@ -65,16 +65,14 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 		int n = f[y].count();
 		val += n ? n * n - W * W : 0;
 		for (int x = 0; x < W; x++) {
-			if (!f[y][x]) {
-				int s = f[y][x] +
-					(y==0 || x==0 || f[y-1][y&1?x-1:x]) +
-					(y==0 || x==W-1 || f[y-1][y&1?x:x+1]) +
-					(x==0 || f[y][x-1]) +
-					(x==W-1 || f[y][x+1]) +
-					(y==H-1 || x==0 || f[y+1][y&1?x-1:x]) +
-					(y==H-1 || x==W-1 || f[y+1][y&1?x:x+1]);
-				val += x == 7 ? -x * x : 0;
-			}
+			int s = f[y][x] +
+				(y==0 || x==0 || f[y-1][y&1?x-1:x]) +
+				(y==0 || x==W-1 || f[y-1][y&1?x:x+1]) +
+				(x==0 || f[y][x-1]) +
+				(x==W-1 || f[y][x+1]) +
+				(y==H-1 || x==0 || f[y+1][y&1?x-1:x]) +
+				(y==H-1 || x==W-1 || f[y+1][y&1?x:x+1]);
+			val += s == 7 ? 0 : -s * s;
 		}
 	}
 	return val;
@@ -85,6 +83,6 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
-	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field) + buddhaScore(field);
+	return /* kawateaScore(field) + */ heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field) + buddhaScore(field);
 }
 
