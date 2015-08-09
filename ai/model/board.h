@@ -1,17 +1,20 @@
 #pragma once
 #include "../common.h"
+#include <cstring>
 
 using namespace std;
 
+/*
 class BitRow {
 public:
 
-	vector <unsigned long long> bits;
+    unsigned long long bits[4];
 
-	BitRow(int size) : bits((size + 63) / 64) {
+	BitRow(int size) { //: bits((size + 63) / 64) {
+        reset();
 	}
 
-	inline int get(int index) const {
+	inline int test(int index) const {
 		return (bits[index / 64] >> (index % 64)) & 1;
 	}
 
@@ -19,25 +22,11 @@ public:
 		bits[index / 64] |= (1ULL << (index % 64));
 	}
 
-	inline bool check(int width) const {
-		int i;
-
-		for (i = 0; i < width / 64; i++) {
-			if (bits[i] != ~0ULL) return false;
-		}
-
-		if (i < bits.size()) {
-			if (bits[i] != (1ULL << (width % 64)) - 1) return false;
-		}
-
-		return true;
+	inline void reset(void) {
+        memset(bits, 0, sizeof(bits));
 	}
 
-	inline void clear(void) {
-		for (int i = 0; i < bits.size(); i++) bits[i] = 0;
-	}
-
-	inline int popcount() const {
+	inline int count() const {
 		int cnt = 0;
 		for (auto b : bits) {
 #ifdef _MSC_VER
@@ -49,6 +38,7 @@ public:
 		return cnt;
 	}
 };
+*/
 
 class Board {
 public:
@@ -59,7 +49,7 @@ public:
 	int expectedScore;
 	unsigned long long hash;
 	string commands;
-	vector <BitRow> field;
+	vector<BitRow> field;
 
 	bool operator<(const Board &b) const {
 		if (currentScore + powerScore + expectedScore != b.currentScore + b.powerScore + b.expectedScore) return currentScore + powerScore + expectedScore < b.currentScore + b.powerScore + b.expectedScore;

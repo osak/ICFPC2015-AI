@@ -36,14 +36,14 @@ class Calc {
         }
         
         for (int i = game.H - 1; i >= 0; i--) {
-            if (game.board.field[i].check(game.W)) {
+            if (game.board.field[i].count() == game.W) {
                 count++;
             } else {
                 game.board.field[i + count] = game.board.field[i];
             }
         }
         
-        for (int i = 0; i < count; i++) game.board.field[i].clear();
+        for (int i = 0; i < count; i++) game.board.field[i].reset();
         
         point = unit.member.size() + 100 * (1 + count) * count / 2;
         if (game.board.previousLine > 1) point += (game.board.previousLine - 1) * point / 10;

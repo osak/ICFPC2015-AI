@@ -13,3 +13,6 @@
 #include <map>
 #include <unordered_set>
 #include <algorithm>
+#include <bitset>
+
+typedef std::bitset<200> BitRow;
