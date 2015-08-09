@@ -65,14 +65,16 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 		int n = f[y].count();
 		val += n ? n * n - W * W : 0;
 		for (int x = 0; x < W; x++) {
-			int s = f[y][x] +
-				(y==0 || x==0 || f[y-1][y&1?x-1:x]) +
-				(y==0 || x==W-1 || f[y-1][y&1?x:x+1]) +
-				(x==0 || f[y][x-1]) +
-				(x==W-1 || f[y][x+1]) +
-				(y==H-1 || x==0 || f[y+1][y&1?x-1:x]) +
-				(y==H-1 || x==W-1 || f[y+1][y&1?x:x+1]);
-			val += s == 7 ? 0 : -s * s;
+			if (!f[y][x]) {
+				int s =
+					(y==0 || x==0 || f[y-1][y&1?x-1:x]) * 2 +
+					(y==0 || x==W-1 || f[y-1][y&1?x:x+1]) * 2 +
+					(x==0 || f[y][x-1]) +
+					(x==W-1 || f[y][x+1]) +
+					(y==H-1 || x==0 || f[y+1][y&1?x-1:x]) +
+					(y==H-1 || x==W-1 || f[y+1][y&1?x:x+1]);
+				val += -s * s;
+			}
 		}
 	}
 	return val;
