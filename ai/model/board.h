@@ -40,11 +40,7 @@ public:
 	inline int popcount() const {
 		int cnt = 0;
 		for (auto b : bits) {
-#ifdef _MSC_VER
-			while (b) ++cnt, b &= b - 1;
-#else
 			cnt += __builtin_popcountll(b);
-#endif
 		}
 		return cnt;
 	}

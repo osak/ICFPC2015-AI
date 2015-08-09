@@ -16,6 +16,7 @@ class LightningEval{
 	int dangerScore(const vector <BitRow> &f);
 	int oneUnitScore(const vector <BitRow> &f);
 	int chanceScore(const vector <BitRow> &f, int leftTurn);
+	int LightningEval::kawateaScore(const vector <BitRow> &f);
 public:
 
 	LightningEval(int H, int W, vector<Unit> &units) : H(H), W(W), units(units){
