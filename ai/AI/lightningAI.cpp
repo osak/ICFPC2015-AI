@@ -99,34 +99,46 @@ unsigned long long getHash(Point &pivot, int theta, Unit &unit) {
     return hash;
 }
 
+typedef int(LightningEval::*pEvaluator)(vector <BitRow> &field, int num);
+vector<pEvaluator> evaluators;
+vector<int> slotSizes;
+
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
     int beamWidth = 10;
     string ans = "";
-    priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
-    priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
     
     LightningEval evaluator(game.H, game.W, game.units);
-    game.board.expectedScore = evaluator.calc(game.board.field, 0);
-    
-    que.push(game.board);
+	evaluators.push_back(&LightningEval::calcMaster);
+	slotSizes.push_back(5);
+	//evaluators.push_back(&LightningEval::calcGod);
+	evaluators.push_back(&LightningEval::calcBuddha);
+	slotSizes.push_back(5);
 
-	int maxVarietySize = beamWidth / 5;
-	auto varietyUpdate = [&](const Board &nextBoard){
-		queNext.push(nextBoard);
-		if (queNext.size() > beamWidth - maxVarietySize) {
-			variety.push(make_pair(Util::GetRandom(), queNext.top()));
-			if (variety.size() >= maxVarietySize) variety.pop();
-			queNext.pop();
+	int evNum = evaluators.size();
+	// int eachWidth = beamWidth + (evNum - 1) / evNum;
+	vector <priority_queue <Board, vector<Board>, greater<Board> > > ques(evNum);
+	priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
+
+	auto calcAndPick = [&](Board &board, int num) {
+		for (int i = 0; i < evNum; ++i) {
+			auto &calc = evaluators[i];
+			board.expectedScore = (evaluator.*calc)(board.field, num);
+			// 同じ盤面を色んなqueueに突っ込むクソコードを書くやつがいるらしい
+			ques[i].push(board);
+			if (ques[i].size() > slotSizes[i]) ques[i].pop();
 		}
 	};
-    
+
+	game.board.expectedScore = 0;
+    que.push(game.board);
+
     for (i = 0; i < game.units.size(); i++) {
         set <unsigned long long> states;
         
-        for (j = 0; j < beamWidth && !que.empty(); j++) {
+		for (j = 0; j < beamWidth && !que.empty(); j++) {
             Board board = que.top();
             map <pair<Point, int>, int> parent;
             unordered_set <unsigned long long> hash;
@@ -185,8 +197,7 @@ Result LightningAI::run(){
                         
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandMove[k]);
-                        nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-						varietyUpdate(nextBoard);
+								calcAndPick(nextBoard, i + 1);
                     }
                 }
                 
@@ -236,10 +247,9 @@ Result LightningAI::run(){
                         
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandRotate[k + 1]);
-                        nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-						varietyUpdate(nextBoard);
-					}
-                }
+								calcAndPick(nextBoard, i + 1);
+						}
+               }
             }
         }
         
@@ -252,10 +262,13 @@ Result LightningAI::run(){
             que.pop();
         }
         
-        while (!variety.empty()) {
-            queNext.push(variety.top().second);
-            variety.pop();
-        }
+		// merge
+		for (int i = 0; i < evNum; ++i) {
+			while (!ques[i].empty()){
+				queNext.push(ques[i].top());
+				ques[i].pop();
+			}
+		}
         swap(que, queNext);
     }
     
