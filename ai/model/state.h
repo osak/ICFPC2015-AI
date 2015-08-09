@@ -15,7 +15,8 @@ class State {
     
     bool operator<(const State &s) const {
         if (power != s.power) return power < s.power;
-        if (pivot != s.pivot) return pivot < s.pivot;
+        if (pivot.x != s.pivot.x) return pivot.x > s.pivot.x;
+        if (pivot.y != s.pivot.y) return pivot.y < s.pivot.y;
         return theta < s.theta;
     }
 };
