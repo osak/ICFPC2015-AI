@@ -40,8 +40,8 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const string &last) {
-    string commands = last;
+string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const char last) {
+    string commands(1, last);
     
     while (1) {
         int commandNum = parent[make_pair(point, theta)];
@@ -94,7 +94,7 @@ Result LightningAI::run(){
     
     que.push(game.board);
 
-	int maxVarietySize = beamWidth / 20;
+	int maxVarietySize = beamWidth / 5;
 	auto varietyUpdate = [&](const Board &nextBoard){
 		queNext.push(nextBoard);
 		if (queNext.size() > beamWidth - maxVarietySize) {

@@ -15,5 +15,5 @@ const int Util::dx[4] = { 0, 0, 1, 1 };
 const int Util::dy[2][4] = { 1, -1, 0, -1, 1, -1, 1, 0 };
 const int Util::rdx[4] = { 0, 0, -1, -1 };
 const int Util::rdy[2][4] = { -1, 1, -1, 0, -1, 1, 0, 1 };
-const string Util::commandMove[4] = { "E", "W", "D", "S" };
-const string Util::commandRotate[3] = { "X", "", "C" };
+const char Util::commandMove[4] = { 'E', 'W', 'D', 'S' };
+const char Util::commandRotate[3] = { 'X', ' ', 'C' };
