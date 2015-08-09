@@ -86,5 +86,5 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 			}
 		}
 	}
-	return val + heightScore(field) * 100 * W * H;
+	return val + heightScore(field) * W * H;
 }
