@@ -64,27 +64,11 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 	return sum * (leftTurn > 10 ? 1 : 0);
 }
 
-int LightningEval::kawateaScore(const vector <BitRow> &f) {
-#ifdef _MSC_VER
-	auto __builtin_popcountll = [](unsigned long long b) {
-		int cnt = 0;
-		while (b) ++cnt, b &= b - 1;
-		return cnt;
-	};
-#endif
-	int sum = 0;
-	for (int x = 0; x < H - 1; ++x) {
-		if (x % 2 == 0) {
-			auto a = f[x].bits[0];
-			auto b = f[x + 1].bits[0];
-			sum += __builtin_popcountll(a & (a >> 1) & (~b));
-		} else {
-			auto a = f[x].bits[0];
-			auto b = f[x + 1].bits[0];
-			sum += __builtin_popcountll(a & (a << 1) & (~b));
-		}
-	}
-	return sum * -5;
+void LightningEval::detectPattern() {
+	//dangerSet = false;
+	//for (auto &u : units) {
+	//	dangerSet = u.member.size();
+	//}
 }
 
 int LightningEval::calc(vector <BitRow> &field, int num){
@@ -92,5 +76,5 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
-	return /*kawateaScore(field) +*/holeScore(field) + heightScore(field)/* + dangerScore(field) + chanceScore(field, units.size() - num)*/;
+	return heightScore(field);
 }

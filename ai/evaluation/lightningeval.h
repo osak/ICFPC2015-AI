@@ -16,7 +16,10 @@ class LightningEval{
 	int dangerScore(const vector <BitRow> &f);
 	int oneUnitScore(const vector <BitRow> &f);
 	int chanceScore(const vector <BitRow> &f, int leftTurn);
-	int kawateaScore(const vector <BitRow> &f);
+	void detectPattern();
+	int tensai(const vector <BitRow> &f);
+	bool dangerSet;
+
 public:
 
 	LightningEval(int H, int W, vector<Unit> &units) : H(H), W(W), units(units){
@@ -24,6 +27,7 @@ public:
 		for (auto &u : units) {
 			maxUnitSize = max(maxUnitSize, (int)u.member.size());
 		}
+		detectPattern();
 	}
 	int calc(vector <BitRow> &field, int num);
 };
