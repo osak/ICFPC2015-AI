@@ -4,6 +4,7 @@
 
 using namespace std;
 
+/*
 class BitRow {
 public:
 
@@ -37,6 +38,7 @@ public:
 		return cnt;
 	}
 };
+*/
 
 class Board {
 public:

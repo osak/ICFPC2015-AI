@@ -99,7 +99,7 @@ Game createGameFromInput() {
 		unitTypes.push_back(unit);
     }
     
-    vector <BitRow> field(H, BitRow(W));
+    vector <BitRow> field(H, BitRow());
     
     boardHash.resize(H);
     for (i = 0; i < H; i++) {

@@ -13,3 +13,5 @@
 #include <map>
 #include <algorithm>
 #include <bitset>
+
+typedef std::bitset<200> BitRow;

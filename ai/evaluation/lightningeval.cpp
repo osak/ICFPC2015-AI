@@ -1,6 +1,8 @@
 #include "lightningeval.h"
 using namespace std;
 
+const BitRow MASK = BitRow(0xffffffffffffffffULL);
+
 // width must be smaller than 64
 int LightningEval::kawateaScore(const vector <BitRow> &f) {
 #ifdef _MSC_VER
@@ -10,10 +12,10 @@ int LightningEval::kawateaScore(const vector <BitRow> &f) {
 		return cnt;
 	};
 #endif
-	unsigned long long a = f[0].bits[0];
+	unsigned long long a = (f[0] & MASK).to_ullong();
     int sum = 0;
 	for (int x = 0; x < H - 1; ++x) {
-		auto b = f[x + 1].bits[0];
+		auto b = (f[x + 1] & MASK).to_ullong();
 		if(x%2 == 0) sum += __builtin_popcountll(a & (a >> 1) & (~b));
 		else sum += __builtin_popcountll(a & (a << 1) & (~b));
 		a = b;
