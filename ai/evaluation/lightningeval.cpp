@@ -75,7 +75,7 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 	int val = 0;
 	for (int y = 0; y < H; y++) {
 		int n = f[y].count();
-		val += n ? n * n - W * W : 0;
+		val += n ? (n * n - W * W) * (H - y) * 4 / (y + 1) : 0;
 		for (int x = 0; x < W; x++) {
 			if (!f[y][x]) {
 				int s =
@@ -96,7 +96,6 @@ int LightningEval::calcRand(vector <BitRow> &f, int num) {
 	return Util::GetRandom();
 }
 
-/*
 int LightningEval::calcGod(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
@@ -114,16 +113,14 @@ int LightningEval::calcGod(vector <BitRow> &field, int num){
 		for (int x = 0; x < W; x++) {
 			sum += (!field[y][x]) * min(x, W - x - 1);
 		}
-		//ret += (field[y].popcount() + (field[y].bits[0] ^ (field[y].bits[0]>>1))) * (y-H-sum) * (W + __builtin_popcountll(field[y].bits[0] ^ field[y+1].bits[0]));
-		int power = (!field[y][0] + !field[y][W - 1] + __builtin_popcountll(field[y].bits[0] ^ (field[y].bits[0] >> 1)));
+		int power = (!field[y][0] + !field[y][W - 1] + (field[y] ^ (field[y] >> 1)).count());
 		int loc = (H - y)*(H - y) + sum;
-		int special = W + __builtin_popcountll(field[y].bits[0] ^ (y == 0 ? 0 : field[y - 1].bits[0]));
-		+__builtin_popcountll(field[y].bits[0] ^ (y == 0 ? 0 : (y & 1 ? field[y - 1].bits[0] >> 1 : field[y - 1].bits[0] << 1)));
+		int special = W + (field[y] ^ (y == 0 ? 0 : field[y - 1])).count()
+		+ (field[y] ^ (y == 0 ? 0 : (y & 1 ? field[y - 1] >> 1 : field[y - 1] << 1))).count();
 		ret -= power * loc * special;
 	}
 	return ret / W;
 }
-*/
 
 int LightningEval::calcMaster(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
