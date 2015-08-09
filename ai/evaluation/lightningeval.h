@@ -11,7 +11,7 @@ class LightningEval{
 	int H, W, maxUnitSize;
 	vector<Unit> units;
 
-	int holeScore(const vector <BitRow> &ff);
+	int kawateaScore(const vector <BitRow> &f);
 	int heightScore(const vector <BitRow> &f);
 	int dangerScore(const vector <BitRow> &f);
 	int oneUnitScore(const vector <BitRow> &f);
