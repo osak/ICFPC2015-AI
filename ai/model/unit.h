@@ -19,11 +19,6 @@ public:
   }
 
 };
- /*
-typedef pair<int, int> Point;
-#define x first
-#define y second
- */
 
 template <class T>
 inline void hash_combine(std::size_t & seed, const T & v) {
