@@ -49,7 +49,14 @@ int LightningEval::oneUnitScore(const vector <BitRow> &f) {
 }
 
 int LightningEval::kadoScore(const vector <BitRow> &f){
-	return 0;
+	if (W <= 3) return 0;
+	int cnt = 0;
+	for (int x = 1; x < H; ++x) {
+		if (!f[x].get(0) && f[x].get(1)) ++cnt;
+		if (!f[x].get(W-1) && f[x].get(W-2)) ++cnt;
+	}
+
+	return cnt * -80;
 }
 
 int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
@@ -66,6 +73,6 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
-	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
+	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field) + kadoScore(field);
 }
 
