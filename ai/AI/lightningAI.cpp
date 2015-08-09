@@ -219,16 +219,16 @@ Result LightningAI::run(){
     for (i = 0; i < ans.size(); i++) {
         switch (ans[i]) {
             case 'W':
-            res.push_back('p');
+            res.push_back('!');
             break;
             case 'E':
-            res.push_back('b');
+            res.push_back('e');
             break;
             case 'D':
             res.push_back('l');
             break;
             case 'S':
-            res.push_back('a');
+            res.push_back('i');
             break;
             case 'X':
             res.push_back('k');

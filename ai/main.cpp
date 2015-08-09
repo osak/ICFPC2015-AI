@@ -3,6 +3,7 @@
 #include "model/game.h"
 #include "model/result.h"
 #include "AI/lightningAI.h"
+#include "calc.h"
 
 using namespace std;
 
@@ -22,9 +23,10 @@ int main()
     LightningAI ai(g);
     
     Result res = ai.run();
+    Result ans = Calc::calcScore(g, res.command);
     
-	printf("%s\n", res.command.c_str());
-	printf("%d\n", res.score);
-
+    fprintf(stderr, "%d -> %d\n", res.score, ans.score);
+    printf("%s", ans.command.c_str());
+    
 	return 0;
 }
