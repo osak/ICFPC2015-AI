@@ -36,6 +36,8 @@ public:
 	int calcGod(vector <BitRow> &field, int num);
 	int calcBuddha(vector <BitRow> &field, int num);
 	int calcRand(vector <BitRow> &f, int num);
+	int calcKawatea(vector <BitRow> &f, int num);
+	int calcDangerChance(vector <BitRow> &f, int num);
 };
 
 

@@ -117,9 +117,10 @@ Result LightningAI::run(){
 		beamWidth += slot;
 		slotSizes.push_back(slot);
 	};
-	addEvaluator(&LightningEval::calcMaster, 6);
-	addEvaluator(&LightningEval::calcGod, 6);
-	addEvaluator(&LightningEval::calcBuddha, 6);
+	addEvaluator(&LightningEval::calcDangerChance, 2);
+	addEvaluator(&LightningEval::calcGod, 2);
+	addEvaluator(&LightningEval::calcKawatea, 2);
+	addEvaluator(&LightningEval::calcBuddha, 2);
 	addEvaluator(&LightningEval::calcRand, 2);
 
 	int evNum = evaluators.size();

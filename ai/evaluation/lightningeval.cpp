@@ -93,6 +93,9 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 }
 
 int LightningEval::calcRand(vector <BitRow> &f, int num) {
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, f, next.pivot, 0, next)) return -1e9;
 	return Util::GetRandom();
 }
 
@@ -100,13 +103,6 @@ int LightningEval::calcGod(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-#ifdef _MSC_VER
-	auto __builtin_popcountll = [](unsigned long long b) {
-		int cnt = 0;
-		while (b) ++cnt, b &= b - 1;
-		return cnt;
-	};
-#endif
 	int ret = 0;
 	for (int y = 0; y < H; y++) {
 		int sum = 0;
@@ -131,6 +127,22 @@ int LightningEval::calcMaster(vector <BitRow> &field, int num){
 }
 
 int LightningEval::calcBuddha(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	return heightScore(field) + buddhaScore(field);
 }
 
+int LightningEval::calcKawatea(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
+	return kawateaScore(field);
+}
+
+int LightningEval::calcDangerChance(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
+	return dangerScore(field) + chanceScore(field, units.size() - num);
+}
