@@ -57,6 +57,9 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 }
 
 int LightningEval::calcGod(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 #ifdef _MSC_VER
 	auto __builtin_popcountll = [](unsigned long long b) {
 		int cnt = 0;
@@ -89,6 +92,9 @@ int LightningEval::calcMaster(vector <BitRow> &field, int num){
 }
 
 int LightningEval::calcBuddha(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	int val = 0;
 	int searchSize = 4;
 	for (int y = 0; y < H; y++) {
