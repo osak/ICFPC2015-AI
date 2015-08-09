@@ -8,7 +8,7 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     
     for (i = 0; i < unit.member.size(); i++) {
         Point p = Util::get(pivot, theta, unit.member[i]);
-        
+
         board.field[p.x].set(p.y);
         board.hash ^= game.boardHash[p.x][p.y];
     }
@@ -110,7 +110,8 @@ Result LightningAI::run(){
         for (j = 0; j < beamWidth && !que.empty(); j++) {
             Board board = que.top();
             map <pair<Point, int>, int> parent;
-            
+            parent.set_empty_key(make_pair(Point(), 1 << 31));
+
             que.pop();
             
             debug(board);
