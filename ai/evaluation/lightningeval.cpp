@@ -49,14 +49,7 @@ int LightningEval::oneUnitScore(const vector <BitRow> &f) {
 }
 
 int LightningEval::kadoScore(const vector <BitRow> &f){
-	if (W <= 3) return 0;
-	int cnt = 0;
-	for (int x = 1; x < H; ++x) {
-		if (!f[x].get(0) && f[x].get(1)) ++cnt;
-		if (!f[x].get(W-1) && f[x].get(W-2)) ++cnt;
-	}
-
-	return cnt * -30;
+	return 0;
 }
 
 int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
