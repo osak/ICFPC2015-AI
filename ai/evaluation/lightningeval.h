@@ -17,7 +17,7 @@ class LightningEval{
 	int dangerScore(const vector <BitRow> &f);
 	int oneUnitScore(const vector <BitRow> &f);
 	int chanceScore(const vector <BitRow> &f, int leftTurn);
-	int kadoScore(const vector <BitRow> &f);
+	int cornerScore(const vector <BitRow> &f);
 	int LightningEval::cornerScore(const vector <BitRow> &f);
 public:
 
