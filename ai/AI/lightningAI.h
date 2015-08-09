@@ -5,6 +5,7 @@
 #include "../model/board.h"
 #include "../model/unit.h"
 #include "../model/state.h"
+#include "../model/table.h"
 #include "../model/game.h"
 #include "../model/result.h"
 
@@ -13,7 +14,7 @@ using namespace std;
 class LightningAI{
 	Game game;
     void update(Board &board, const Point &pivot, int theta, const Unit &unit);
-	string getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const char last);
+	string getCommand(Table <pair<State, char> > &parent, State state, const char last);
 	void debug(const Board &board);
 	int calc(const Board &board, const Unit &unit);
 public:

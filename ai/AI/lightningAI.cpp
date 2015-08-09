@@ -40,25 +40,16 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point, int theta, const char last) {
+string LightningAI::getCommand(Table <pair<State, char> > &parent, State state, const char last) {
     string commands(1, last);
     
     while (1) {
-        int commandNum = parent[make_pair(point, theta)];
+        if (!parent.count(state)) break;
         
-        if (commandNum == -1) break;
+        pair <State, char> par = parent[state];
         
-        if (commandNum <= 3) {
-            commands += Util::commandMove[commandNum];
-            Point newPoint = point;
-            newPoint.x += Util::rdx[commandNum];
-            newPoint.y += Util::rdy[point.x % 2][commandNum];
-            point = newPoint;
-        } else {
-            commandNum -= 5;
-            commands += Util::commandRotate[commandNum + 1];
-            theta = (theta - commandNum + 6) % 6;
-        }
+        commands += par.second;
+        state = par.first;
     }
     
     reverse(commands.begin(), commands.end());
@@ -81,20 +72,34 @@ void LightningAI::debug(const Board &board) {
     fflush(stderr);
 }
 
-unsigned long long getHash(Point &pivot, int theta, Unit &unit) {
-    unsigned long long hash = 0;
-    vector <Point> points;
+int getTurnNum(Unit &unit) {
+    set <vector <Point> > visited;
     
-    for (int i = 0; i < unit.member.size(); i++) points.push_back(Util::get(pivot, theta, unit.member[i]));
-    
-    sort(points.begin(), points.end());
-    
-    points.push_back(pivot);
-    
-    for (int i = 0; i < points.size(); i++) {
-        hash = hash * 1009 + points[i].x;
-        hash = hash * 1009 + points[i].y;
+    for (int i = 0; i < 6; i++) {
+        vector <Point> points;
+        
+        for (int j = 0; j < unit.member.size(); j++) points.push_back(Util::get(unit.pivot, i, unit.member[j]));
+        
+        sort(points.begin(), points.end());
+        
+        points.push_back(unit.pivot);
+        
+        if (visited.count(points)) return i;
+        
+        visited.insert(points);
     }
+    
+    return 6;
+}
+
+unsigned getHash(State &state) {
+    unsigned hash = 0;
+    
+    hash |= (unsigned)state.pivot.x << 22;
+    hash |= (unsigned)state.pivot.y << 14;
+    hash |= (unsigned)state.theta << 11;
+    hash |= (unsigned)state.bannedPivot << 3;
+    hash |= (unsigned)state.bannedTheta;
     
     return hash;
 }
@@ -107,6 +112,9 @@ Result LightningAI::run(){
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
+    ValidTable valid;
+    Table <pair<State, char> > parent;
+    Table <int> value;
     
     LightningEval evaluator(game.H, game.W, game.units);
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
@@ -124,40 +132,47 @@ Result LightningAI::run(){
 	};
     
     for (i = 0; i < game.units.size(); i++) {
-        set <unsigned long long> states;
+        int turnNum = getTurnNum(game.units[i]);
+        unordered_set <unsigned long long> states;
         
         for (j = 0; j < beamWidth && !que.empty(); j++) {
             Board board = que.top();
-            map <pair<Point, int>, int> parent;
-            unordered_set <unsigned long long> hash;
-            unordered_set <unsigned long long> visit;
+            unordered_set <unsigned> visited;
             
             que.pop();
             
             debug(board);
+            
+            valid.clear();
+            parent.clear();
+            value.clear();
             
             if (board.currentScore + board.powerScore > maxScore) {
                 maxScore = board.currentScore + board.powerScore;
                 ans = board.commands;
             }
             
-            if (!Util::check(game.H, game.W, board.field, game.units[i].pivot, 0, game.units[i])) continue;
+            auto isValid = [&](Point &pivot, int theta) {
+                if (!valid.count(make_pair(pivot, theta))) valid[make_pair(pivot, theta)] = Util::check(game.H, game.W, board.field, pivot, theta, game.units[i]);
+                return valid[make_pair(pivot, theta)];
+            };
             
-            hash.insert(getHash(game.units[i].pivot, 0, game.units[i]));
-            parent[make_pair(game.units[i].pivot, 0)] = -1;
-            queSearch.push(State(0, game.units[i].pivot, 0));
+            if (!isValid(game.units[i].pivot, 0)) continue;
+            
+            value[State(0, game.units[i].pivot, 0, 0, 6)] = 0;
+            queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
             
             while (!queSearch.empty()) {
                 bool insert = false;
                 int flag = 0;
-                unsigned long long value;
+                unsigned hash;
                 State state = queSearch.top();
                 
                 queSearch.pop();
                 
-                value = getHash(state.pivot, state.theta, game.units[i]);
-                if (visit.count(value)) continue;
-                visit.insert(value);
+                hash = getHash(state);
+                if (visited.count(hash)) continue;
+                visited.insert(hash);
                 
                 // 移動
                 for (k = 0; k < 4; k++) {
@@ -166,15 +181,9 @@ Result LightningAI::run(){
                     pivot.x += Util::dx[k];
                     pivot.y += Util::dy[state.pivot.x % 2][k];
                     
-                    if (Util::check(game.H, game.W, board.field, pivot, state.theta, game.units[i])) {
-                        unsigned long long nextHash = getHash(pivot, state.theta, game.units[i]);
-                        if (!hash.count(nextHash)) {
-                            flag |= (1 << k);
-                            hash.insert(nextHash);
-                            parent[make_pair(pivot, state.theta)] = k;
-                            queSearch.push(State(state.power, pivot, state.theta));
-                        }
-                    } else if (!insert) {
+                    if (!isValid(pivot, state.theta)) {
+                        if (insert) continue;
+                        
                         insert = true;
                         Board nextBoard = board;
                         
@@ -184,31 +193,65 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandMove[k]);
+                        nextBoard.commands += getCommand(parent, state, Util::commandMove[k]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						varietyUpdate(nextBoard);
+                    } else {
+                        if (k <= 1 && state.bannedPivot == pivot.y && state.bannedTheta == state.theta) continue;
+                        
+                        State nextState(state.power, pivot, state.theta, state.bannedPivot, state.bannedTheta);
+                        if (k >= 2) {
+                            nextState.bannedPivot = 0;
+                            nextState.bannedTheta = 6;
+                        }
+                        
+                        if (visited.count(getHash(nextState))) continue;
+                        
+                        flag |= (1 << k);
+                        
+                        if (value.count(nextState) && value[nextState] >= state.power) continue;
+                        
+                        value[nextState] = nextState.power;
+                        parent[nextState] = make_pair(state, Util::commandMove[k]);
+                        queSearch.push(nextState);
                     }
                 }
                 
                 // フレーズ (3方向に移動可能なときにei!を唱えられる)
                 if ((flag & 13) == 13) {
-                    Point pivot = state.pivot;
+                    State nextState1 = state;
                     
-                    pivot.x += Util::dx[2];
-                    pivot.y += Util::dy[state.pivot.x % 2][2];
+                    nextState1.pivot.x += Util::dx[0];
+                    nextState1.pivot.y += Util::dy[state.pivot.x % 2][0];
+                    nextState1.bannedPivot = 1;
+                    nextState1.bannedTheta = 6;
                     
-                    parent[make_pair(pivot, state.theta)] = 3;
+                    State nextState2 = nextState1;
                     
-                    pivot = state.pivot;
+                    nextState2.pivot.x += Util::dx[3];
+                    nextState2.pivot.y += Util::dy[state.pivot.x % 2][3];
+                    nextState2.bannedPivot = nextState2.pivot.y;
+                    nextState2.bannedTheta = nextState2.theta;
                     
-                    pivot.x += Util::dx[3];
-                    pivot.y += Util::dy[state.pivot.x % 2][3];
+                    State nextState3 = nextState2;
                     
-                    parent[make_pair(pivot, state.theta)] = 1;
+                    nextState3.pivot.x += Util::dx[1];
+                    nextState3.pivot.y += Util::dy[(state.pivot.x + 1) % 2][1];
+                    
                     if (board.powerScore == 0 && state.power == 0) {
-                        queSearch.push(State(state.power + 306, pivot, state.theta));
+                        nextState3.power += 306;
                     } else {
-                        queSearch.push(State(state.power + 6, pivot, state.theta));
+                        nextState3.power += 6;
+                    }
+                    
+                    if (!value.count(nextState3) || value[nextState3] < nextState3.power) {
+                        value[nextState1] = nextState1.power;
+                        parent[nextState1] = make_pair(state, Util::commandMove[0]);
+                        value[nextState2] = nextState2.power;
+                        parent[nextState2] = make_pair(nextState1, Util::commandMove[3]);
+                        value[nextState3] = nextState3.power;
+                        parent[nextState3] = make_pair(nextState2, Util::commandMove[1]);
+                        queSearch.push(nextState3);
                     }
                 }
                 
@@ -216,16 +259,11 @@ Result LightningAI::run(){
                 for (k = -1; k <= 1; k++) {
                     if (k == 0) continue;
                     
-                    int theta = (state.theta + k + 6) % 6;
+                    int theta = (state.theta + k + turnNum) % turnNum;
                     
-                    if (Util::check(game.H, game.W, board.field, state.pivot, theta, game.units[i])) {
-                        unsigned long long nextHash = getHash(state.pivot, theta, game.units[i]);
-                        if (!hash.count(nextHash)) {
-                            hash.insert(nextHash);
-                            parent[make_pair(state.pivot, theta)] = k + 5;
-                            queSearch.push(State(state.power, state.pivot, theta));
-                        }
-                    } else if (!insert) {
+                    if (!isValid(state.pivot, theta)) {
+                        if (insert) continue;
+                        
                         insert = true;
                         Board nextBoard = board;
                         
@@ -235,10 +273,22 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandRotate[k + 1]);
+                        nextBoard.commands += getCommand(parent, state, Util::commandRotate[k + 1]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						varietyUpdate(nextBoard);
-					}
+                    } else {
+                        if (state.bannedPivot == state.pivot.y && state.bannedTheta == theta) continue;
+                        
+                        State nextState(state.power, state.pivot, theta, state.bannedPivot, state.bannedTheta);
+                        
+                        if (visited.count(getHash(nextState))) continue;
+                        
+                        if (value.count(nextState) && value[nextState] >= state.power) continue;
+                        
+                        value[nextState] = nextState.power;
+                        parent[nextState] = make_pair(state, Util::commandRotate[k + 1]);
+                        queSearch.push(nextState);
+                    }
                 }
             }
         }
