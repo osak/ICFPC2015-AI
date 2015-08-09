@@ -73,9 +73,26 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 }
 
 int LightningEval::calc(vector <BitRow> &field, int num){
+	int ret = 0;
+	for (int y = 0; y < H; y++) {
+		int sum = 0;
+		for (int x = 0; x < W; x++) {
+			sum += (!field[y].get(x)) * min(x, W-x-1);
+		}
+		//ret += (field[y].popcount() + (field[y].bits[0] ^ (field[y].bits[0]>>1))) * (y-H-sum) * (W + __builtin_popcountll(field[y].bits[0] ^ field[y+1].bits[0]));
+		int power = (!field[y].get(0) + !field[y].get(W-1) + __builtin_popcountll(field[y].bits[0] ^ (field[y].bits[0]>>1)));
+		int loc = (H-y)*(H-y)+sum;
+		int special = W + __builtin_popcountll(field[y].bits[0] ^ (y == 0 ? 0 : field[y-1].bits[0]));
+			+ __builtin_popcountll(field[y].bits[0] ^ (y == 0 ? 0 : (y&1 ? field[y-1].bits[0] >> 1 : field[y-1].bits[0] << 1)));
+		ret -= power * loc * special;
+	}
+	return ret/W;
+	/*
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
 	return holeScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
+	*/
 }
+
