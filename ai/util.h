@@ -76,7 +76,7 @@ public:
 
 		for (i = 0; i < unit.member.size(); i++) {
 			Point p = get(pivot, theta, unit.member[i]);
-			if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x].get(p.y) == 1) return false;
+			if (p.x < 0 || p.x >= H || p.y < 0 || p.y >= W || field[p.x].test(p.y)) return false;
 		}
 
 		return true;

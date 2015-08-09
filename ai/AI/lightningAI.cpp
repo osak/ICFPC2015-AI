@@ -14,7 +14,7 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     }
     
     for (i = game.H - 1; i >= 0; i--) {
-        if (board.field[i].check(game.W)) {
+        if (board.field[i].count() == game.W) {
             count++;
         }
         else {
@@ -22,14 +22,14 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
         }
     }
     
-    for (i = 0; i < count; i++) board.field[i].clear();
+    for (i = 0; i < count; i++) board.field[i].reset();
     
     if (count > 0) {
         board.hash = 0;
         
         for (i = count; i < game.H; i++) {
             for (j = 0; j < game.W; j++) {
-                if (board.field[i].get(j)) board.hash ^= game.boardHash[i][j];
+                if (board.field[i].test(j)) board.hash ^= game.boardHash[i][j];
             }
         }
     }
@@ -73,7 +73,7 @@ void LightningAI::debug(const Board &board) {
     for (int i = 0; i < game.H; i++) {
 		if (i % 2) fprintf(stderr, " ");
         for (int j = 0; j < game.W; j++) {
-            fprintf(stderr, "%d ", board.field[i].get(j));
+            fprintf(stderr, "%d ", board.field[i].test(j));
         }
         fprintf(stderr, "\n");
     }
