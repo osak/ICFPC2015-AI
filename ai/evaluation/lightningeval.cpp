@@ -92,6 +92,10 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 	return val/10;
 }
 
+int LightningEval::calcRand(vector >BitRow> &f, int num) {
+	return Unit::GetRandom();
+}
+
 /*
 int LightningEval::calcGod(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
