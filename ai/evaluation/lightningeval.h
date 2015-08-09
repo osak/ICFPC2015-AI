@@ -25,7 +25,8 @@ public:
 			maxUnitSize = max(maxUnitSize, (int)u.member.size());
 		}
 	}
-	int calc(vector <BitRow> &field, int num);
+	int calcMaster(vector <BitRow> &field, int num);
+	int calcGod(vector <BitRow> &field, int num);
 };
 
 
