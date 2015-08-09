@@ -23,8 +23,8 @@ int main()
     
     Result res = ai.run();
     
-	printf("%s\n", res.command.c_str());
-	printf("%d\n", res.score);
+	printf("%s", res.command.c_str());
+    fprintf(stderr, "%d\n", res.score);
 
 	return 0;
 }
