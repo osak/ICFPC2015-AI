@@ -57,6 +57,9 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 }
 
 int LightningEval::calc(vector <BitRow> &field, int num){
+	if (num == units.size()) return 0;
+	Unit &next = units[num];
+	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	/*if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
@@ -64,27 +67,22 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
 	*/
 	int val = 0;
-	int searchSize = 4;
 	for (int y = 0; y < H; y++) {
+		int n = field[y].popcount();
+		val += n ? n * n - W * W : 0;
 		for (int x = 0; x < W; x++) {
 			if (!field[y].get(x)) {
-				int s = 0;
-				for (int yy = y - 1; y - yy <= searchSize; yy--) {
-					if (yy < 0) {
-						s += 100 * (y - yy + 1) / (y - yy);
-					} else {
-						for (int xx = x - yy/2 - ((yy&1) && !(y&1)); xx <= x + yy/2 + ((yy&1) && (y&1)); xx++) {
-							if (xx < 0 || xx >= W) {
-								s += 100 / (y - yy);
-							} else {
-								s += 100 * field[yy].get(xx) / (y - yy);
-							}
-						}
-					}
-				}
-				val -= s * field[y].popcount();
+				int s = field[y].get(x) +
+					(y==0 || x==0 || field[y-1].get(y&1?x-1:x)) +
+					(y==0 || x==W-1 || field[y-1].get(y&1?x:x+1)) +
+					(x==0 || field[y].get(x-1)) +
+					(x==W-1 || field[y].get(x+1)) +
+					(y==H-1 || x==0 || field[y+1].get(y&1?x-1:x)) +
+					(y==H-1 || x==W-1 || field[y+1].get(y&1?x:x+1));
+				val += x == 7 ? -x * x : 0;
 			}
 		}
 	}
-	return val + heightScore(field) * W * H;
+	return val + heightScore(field);
 }
+
