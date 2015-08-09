@@ -59,7 +59,7 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 	return sum * (leftTurn > 10 ? 1 : 0);
 }
 
-int LightningEval::buddhaScore(const vector <BitRow> &f) {
+int LightningEval::buddhaScore(const vector <BitRow> &f){
 	int val = 0;
 	for (int y = 0; y < H; y++) {
 		int n = f[y].popcount();
