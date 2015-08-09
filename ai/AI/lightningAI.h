@@ -4,6 +4,7 @@
 #include "../util.h"
 #include "../model/board.h"
 #include "../model/unit.h"
+#include "../model/state.h"
 #include "../model/game.h"
 #include "../model/result.h"
 

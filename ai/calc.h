@@ -116,6 +116,8 @@ class Calc {
                 }
             }
             
+            r.command += command;
+            /*
             for (int j = 0; j < command.size(); j++) {
                 if (command[j] == 'i') {
                     Point nowPivot = pivot;
@@ -157,6 +159,7 @@ class Calc {
                     r.command += command[j];
                 }
             }
+            */
         }
         
         if (c != commands.size()) {

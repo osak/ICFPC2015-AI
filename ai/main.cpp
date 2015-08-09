@@ -23,8 +23,7 @@ int main()
     LightningAI ai(g);
     
     Result res = ai.run();
-	Result ans = res;
-    //Result ans = Calc::calcScore(g, res.command);
+    Result ans = Calc::calcScore(g, res.command);
     
     fprintf(stderr, "%d -> %d\n", res.score, ans.score);
     printf("%s", ans.command.c_str());

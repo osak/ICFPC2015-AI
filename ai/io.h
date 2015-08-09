@@ -132,6 +132,7 @@ Game createGameFromInput() {
     
 	initBoard.currentScore = 0;
 	initBoard.previousLine = 0;
+    initBoard.powerScore = 0;
     initBoard.expectedScore = 0;
     initBoard.commands = "";
     initBoard.field = field;

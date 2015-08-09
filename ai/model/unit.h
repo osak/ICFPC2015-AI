@@ -8,11 +8,16 @@ public:
 
 	int x;
 	int y;
-
+    
 	bool operator<(const Point &p) const {
 		if (x != p.x) return x < p.x;
 		return y < p.y;
 	}
+    
+    bool operator!=(const Point &p) const {
+        if (x != p.x) return true;
+        return y != p.y;
+    }
 };
 
 class Unit {
