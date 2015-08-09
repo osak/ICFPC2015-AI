@@ -62,11 +62,24 @@ int LightningEval::cornerScore(const vector <BitRow> &f) {
 }
 
 int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
+	if (W <= 1) return 0;
 	if (leftTurn <= 10 || bigWidth) return 0;
 
 	int sum = 0;
 	for (int x = H / 3; x < H; ++x) {
-		if (f[x].count() == W - 1 && f[x][0] && f[x][W - 1]) sum += 150;
+		if (f[x].count() == W - 1){
+			if (!f[x][0]) {
+				if ((x & 1) && f[x - 1][1]) sum -= 150;
+				else sum += 150;
+			}
+			else if (!f[x][W - 1]) {
+				if (!(x & 1) && f[x - 1][W - 2]) sum -= 150;
+				else sum += 150;
+			}
+			else {
+				sum += 150;
+			}
+		}
 	}
 	return sum * (safeUnits ? 1.2 : 0);
 }
