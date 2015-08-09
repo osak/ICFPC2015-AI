@@ -74,7 +74,7 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 
 int LightningEval::calc(vector <BitRow> &field, int num){
 	int ret = 0;
-	for (int y = 0; y < H; y++) {
+	 for (int y = 0; y < H; y++) {
 		int sum = 0;
 		for (int x = 0; x < W; x++) {
 			sum += (!field[y].get(x)) * min(x, W-x-1);
@@ -86,6 +86,7 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 			+ __builtin_popcountll(field[y].bits[0] ^ (y == 0 ? 0 : (y&1 ? field[y-1].bits[0] >> 1 : field[y-1].bits[0] << 1)));
 		ret -= power * loc * special;
 	}
+	// test
 	return ret/W;
 	/*
 	if (num == units.size()) return 0;
