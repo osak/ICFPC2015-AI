@@ -14,4 +14,7 @@
 #include <algorithm>
 #include <bitset>
 
+#include <sparsehash/dense_hash_map>
+
 typedef std::bitset<200> BitRow;
+#define map google::dense_hash_map
