@@ -53,19 +53,17 @@ int LightningEval::oneUnitScore(const vector <BitRow> &f) {
 
 int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 	int sum = 0;
-	int empty = 0;
 	for (int x = 0; x < H; ++x) {
-		if (f[x].count() == 0) empty++;
 		if (f[x].count() == W - 1) sum += 150;
 	}
-	return sum * (leftTurn > 10 && empty > H / 2 ? 1 : 0);
+	return sum * (leftTurn > 10 ? 1 : 0);
 }
 
 int LightningEval::buddhaScore(const vector <BitRow> &f){
 	int val = 0;
 	for (int y = 0; y < H; y++) {
 		int n = f[y].count();
-		val += n ? n * n - W * W : 0;
+		val += n ? (n * n - W * W) * (H - y) * 4 / (y + 1) : 0;
 		for (int x = 0; x < W; x++) {
 			if (!f[y][x]) {
 				int s =
