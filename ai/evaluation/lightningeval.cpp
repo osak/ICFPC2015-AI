@@ -58,7 +58,7 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 		if (f[x].count() == 0) empty++;
 		if (f[x].count() == W - 1) sum += 150;
 	}
-	return sum * (leftTurn > 10 && empty > H * 2 / 3 ? 1 : 0);
+	return sum * (leftTurn > 10 && empty > H / 2 ? 1 : 0);
 }
 
 int LightningEval::buddhaScore(const vector <BitRow> &f){
