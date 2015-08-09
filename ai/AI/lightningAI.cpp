@@ -83,7 +83,7 @@ void LightningAI::debug(const Board &board) {
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 1000;
+    int beamWidth = 10;
     string ans = "";
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
