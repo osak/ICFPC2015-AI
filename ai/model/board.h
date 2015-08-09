@@ -40,6 +40,13 @@ public:
 	inline int popcount() const {
 		int cnt = 0;
 		for (auto b : bits) {
+#ifdef _MSC_VER
+			auto __builtin_popcountll = [](unsigned long long b) {
+				int cnt = 0;
+				while (b) ++cnt, b &= b - 1;
+				return cnt;
+			};
+#endif
 			cnt += __builtin_popcountll(b);
 		}
 		return cnt;
