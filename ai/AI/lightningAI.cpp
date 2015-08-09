@@ -92,6 +92,7 @@ Result LightningAI::run(){
     LightningEval evaluator(game.H, game.W, game.units);
 	evaluators.push_back(&LightningEval::calcMaster);
 	evaluators.push_back(&LightningEval::calcGod);
+	evaluators.push_back(&LightningEval::calcBuddha);
 
 	int evNum = evaluators.size();
 	int beamWidth = 10;

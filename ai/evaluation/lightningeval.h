@@ -27,6 +27,7 @@ public:
 	}
 	int calcMaster(vector <BitRow> &field, int num);
 	int calcGod(vector <BitRow> &field, int num);
+	int calcBuddha(vector <BitRow> &field, int num);
 };
 
 
