@@ -10,7 +10,8 @@ using namespace std;
 int main()
 {
 #ifdef _MSC_VER
-	freopen("../../ICFPC2015/cpp_input/problem_1_0.txt", "r", stdin);		// 900
+	freopen("../../ICFPC2015/cpp_input/problem_3_0.txt", "r", stdin);
+	//freopen("../../ICFPC2015/cpp_input/problem_1_0.txt", "r", stdin);		// 900
 	//freopen("../../ICFPC2015/cpp_input/problem_17_0.txt", "r", stdin);	// 1400
 	//freopen("../../ICFPC2015/cpp_input/problem_19_0.txt", "r", stdin);		// 1300
 	//freopen("../../ICFPC2015/cpp_input/problem_21_0.txt", "r", stdin);	// 620
