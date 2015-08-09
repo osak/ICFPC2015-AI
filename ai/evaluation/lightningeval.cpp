@@ -32,9 +32,7 @@ int LightningEval::holeScore(const vector <BitRow> &ff) {
 int LightningEval::heightScore(const vector <BitRow> &f) {
 	int sum = 0;
 	for (int x = 0; x < H; ++x) {
-		for (int y = 0; y < W; ++y) {
-			if (f[x].get(y)) sum += H - x;
-		}
+		sum += (H - x) * f[x].popcount();
 	}
 	return -sum;
 }
@@ -77,5 +75,5 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
-	return holeScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
+	return heightScore(field);
 }

@@ -68,6 +68,8 @@ void init(Unit &unit, int H, int W) {
 
 Game createGameFromInput() {
 	fprintf(stderr, "waiting input\n");
+	fflush(stderr);
+
 	Game game;
 	int &H = game.H, &W = game.W;
 	auto &boardHash = game.boardHash;
