@@ -10,6 +10,7 @@ using namespace std;
 class LightningEval{
 	int H, W, maxUnitSize;
 	bool bigHeight, bigWidth;
+	bool safeUnits;
 	vector<Unit> units;
 
 	int kawateaScore(const vector <BitRow> &f);
@@ -18,6 +19,7 @@ class LightningEval{
 	int oneUnitScore(const vector <BitRow> &f);
 	int chanceScore(const vector <BitRow> &f, int leftTurn);
 	int cornerScore(const vector <BitRow> &f);
+	int offensiveCalc(const vector <BitRow> &f);
 public:
 
 	LightningEval(int H, int W, vector<Unit> &units) : H(H), W(W), units(units){
@@ -26,6 +28,7 @@ public:
 		for (auto &u : units) {
 			maxUnitSize = max(maxUnitSize, (int)u.member.size());
 		}
+		safeUnits = maxUnitSize <= 4;
 	}
 	int calc(vector <BitRow> &field, int num);
 };

@@ -24,13 +24,13 @@ int LightningEval::kawateaScore(const vector <BitRow> &f) {
 int LightningEval::heightScore(const vector <BitRow> &f) {
 	int sum = 0;
 	for (int x = 0; x < H; ++x) {
-		sum += (H - x) * (bigHeight ? (H - x):1) * f[x].popcount();
+		sum += (H - x) * (H - x) * f[x].popcount();
 	}
 	return -sum;
 }
 
 int LightningEval::dangerScore(const vector <BitRow> &f) {
-	int limit = H / 2;
+	int limit = safeUnits ? H / 3 : H / 2;
 	int sum = 0;
 	for (int x = 0; x < limit; ++x) {
 		sum += f[x].popcount() * (H - x);
@@ -65,7 +65,7 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 	for (int x = H / 3; x < H; ++x) {
 		if (f[x].popcount() == W - 1 && f[x].get(0) && f[x].get(W - 1)) sum += 150;
 	}
-	return sum;
+	return sum * (safeUnits ? 1.2 : 0);
 }
 
 int LightningEval::calc(vector <BitRow> &field, int num){
