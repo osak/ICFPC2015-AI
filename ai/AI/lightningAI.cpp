@@ -83,7 +83,7 @@ void LightningAI::debug(const Board &board) {
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 170;
+    int beamWidth = 1000;
     string ans = "";
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
@@ -182,7 +182,8 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.commands += getCommand(parent, point, theta, Util::commandRotate[k + 1]);
-                        nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
+                        nextBoard.expectedScore = nextBoard.currentScore;
+//                        nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						varietyUpdate(nextBoard);
 					}
                 }
