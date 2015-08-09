@@ -83,6 +83,6 @@ int LightningEval::calc(vector <BitRow> &field, int num){
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
 	if (maxUnitSize == 1) return oneUnitScore(field);
-	return /* kawateaScore(field) + */ heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field) + buddhaScore(field);
+	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field) + buddhaScore(field);
 }
 
