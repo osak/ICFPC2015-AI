@@ -62,17 +62,17 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 int LightningEval::buddhaScore(const vector <BitRow> &f){
 	int val = 0;
 	for (int y = 0; y < H; y++) {
-		int n = f[y].popcount();
+		int n = f[y].count();
 		val += n ? n * n - W * W : 0;
 		for (int x = 0; x < W; x++) {
-			if (!f[y].get(x)) {
-				int s = f[y].get(x) +
-					(y==0 || x==0 || f[y-1].get(y&1?x-1:x)) +
-					(y==0 || x==W-1 || f[y-1].get(y&1?x:x+1)) +
-					(x==0 || f[y].get(x-1)) +
-					(x==W-1 || f[y].get(x+1)) +
-					(y==H-1 || x==0 || f[y+1].get(y&1?x-1:x)) +
-					(y==H-1 || x==W-1 || f[y+1].get(y&1?x:x+1));
+			if (!f[y][x]) {
+				int s = f[y][x] +
+					(y==0 || x==0 || f[y-1][y&1?x-1:x]) +
+					(y==0 || x==W-1 || f[y-1][y&1?x:x+1]) +
+					(x==0 || f[y][x-1]) +
+					(x==W-1 || f[y][x+1]) +
+					(y==H-1 || x==0 || f[y+1][y&1?x-1:x]) +
+					(y==H-1 || x==W-1 || f[y+1][y&1?x:x+1]);
 				val += x == 7 ? -x * x : 0;
 			}
 		}
