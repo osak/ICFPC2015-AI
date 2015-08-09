@@ -21,8 +21,8 @@ public:
 	static const int dy[2][4];
 	static const int rdx[4];
 	static const int rdy[2][4];
-	static const string commandMove[4];
-	static const string commandRotate[3];
+	static const char commandMove[4];
+	static const char commandRotate[3];
 
 	static unsigned GetRandom(void) {
 		unsigned t;
