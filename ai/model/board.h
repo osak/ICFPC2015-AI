@@ -47,7 +47,7 @@ public:
 
 class Board {
 public:
-
+	int spellMask;
 	int currentScore;
 	int previousLine;
     int powerScore;

@@ -13,5 +13,7 @@ public:
 	Board board;
 	// ユニット（流れてくる順）
 	vector<Unit> units;
+	vector<string> spells;
+	vector<int> spellLens;
 };
 

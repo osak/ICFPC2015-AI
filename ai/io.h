@@ -129,6 +129,20 @@ Game createGameFromInput() {
         
 		units.push_back(unitTypes[id]);
     }
+
+	 int spellCount; scanf("%d", &spellCount);
+	 for (int i = 0; i < spellCount; i++) {
+		 int len;
+		 char tmp[53];
+		 scanf("%d %s", &len, tmp);
+		 string original(tmp);
+		 char last = original[original.size()-1];
+		 if (last != '2' && last != '3') {
+			original += "2";
+		 }
+		 game.spells.push_back(original);
+		 game.spellLens.push_back(len);
+	 }
     
 	initBoard.currentScore = 0;
 	initBoard.previousLine = 0;
@@ -136,6 +150,7 @@ Game createGameFromInput() {
     initBoard.expectedScore = 0;
     initBoard.commands = "";
     initBoard.field = field;
+	 initBoard.spellMask = 0;
     
 	fprintf(stderr, "initializing done\n");
 	fflush(stderr);

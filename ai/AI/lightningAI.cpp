@@ -160,7 +160,11 @@ Result LightningAI::run(){
 		beamWidth += slot;
 		slotSizes.push_back(slot);
 	};
-	addEvaluator(&LightningEval::calcMaster, 1);
+	addEvaluator(&LightningEval::calcMaster, 7);
+	addEvaluator(&LightningEval::calcBuddha, 6);
+	addEvaluator(&LightningEval::calcGod, 4);
+	addEvaluator(&LightningEval::calcHole, 2);
+	addEvaluator(&LightningEval::calcRand, 1);
 
 	int evNum = evaluators.size();
 	// int eachWidth = beamWidth + (evNum - 1) / evNum;
@@ -191,7 +195,7 @@ Result LightningAI::run(){
             que.pop();
             
             debug(board);
-            
+
             valid.clear();
             table.clear();
             
@@ -206,10 +210,52 @@ Result LightningAI::run(){
             };
             
             if (!isValid(game.units[i].pivot, 0)) continue;
+
+				int spellIx;
+				string spell;
+				for (spellIx = 0; spellIx < game.spells.size(); spellIx++) {
+
+					if (board.spellMask >> spellIx & 1) {
+						continue;
+					}
+					spell = game.spells[spellIx];
+					Point pivot;
+					int theta;
+					if (Util::checkSpell(game.H, game.W, turnNum, board, game.units[i], spell, pivot, theta)) {
+						int score = 300 + 2 * game.spellLens[spellIx];
+						table[State(score, pivot, theta, 0, 6)] = ((unsigned long long)score << 39) | 30;
+						queSearch.push(State(score, pivot, theta, 0, 6));
+						break;
+					}
+				}
             
             table[State(0, game.units[i].pivot, 0, 0, 6)] = 14;
             queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
             
+				auto setCommand = [&](Board &nextBoard, State state, char cmd) {
+					string commands(1, cmd);
+
+					while (1) {
+						if ((table[state] & 15) == 15) break;
+
+						commands += addCommand(table[state], state);
+					}
+
+					reverse(commands.begin(), commands.end());
+
+					if (table[state]&16) {
+						for (int ci = 0; ci < spell.size(); ci++) {
+							if (spell[ci] < '4') {
+								nextBoard.commands += Util::commandMove[spell[ci] - '0'];
+							} else {
+								nextBoard.commands += Util::commandRotate[spell[ci] - '4'];
+							}
+						}
+						nextBoard.spellMask |= 1<<spellIx;
+					}
+					nextBoard.commands += commands;
+				};
+
             while (!queSearch.empty()) {
                 bool insert = false;
                 int flag = 0;
@@ -240,7 +286,7 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(table, state, Util::commandMove[k]);
+                        setCommand(nextBoard, state, Util::commandMove[k]);
 								calcAndPick(board, nextBoard, i + 1);
                     } else {
                         if (k <= 1 && state.bannedPivot == pivot.y && state.bannedTheta == state.theta) continue;
@@ -283,11 +329,7 @@ Result LightningAI::run(){
                     nextState3.pivot.x += Util::dx[1];
                     nextState3.pivot.y += Util::dy[(state.pivot.x + 1) % 2][1];
                     
-                    if (board.powerScore == 0 && state.power == 0) {
-                        nextState3.power += 306;
-                    } else {
-                        nextState3.power += 6;
-                    }
+							nextState3.power += 6;
                     
                     if (table.getValue(nextState3) < nextState3.power) {
                         table[nextState1] = computeData(nextState1.power, state, Util::commandMove[0]);
@@ -315,7 +357,7 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(table, state, Util::commandRotate[k + 1]);
+                        setCommand(nextBoard, state, Util::commandRotate[k + 1]);
 								calcAndPick(board, nextBoard, i + 1);
                     } else {
                         if (state.bannedPivot == state.pivot.y && state.bannedTheta == theta) continue;

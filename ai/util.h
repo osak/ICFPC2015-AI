@@ -82,4 +82,30 @@ public:
 		return true;
 	}
 
+	static bool checkSpell(int H, int W, int turnNum, Board &board, Unit &unit, string spell, Point &pivot, int &theta) {
+		int n = spell.size();
+		pivot = unit.pivot;
+		theta = 0;
+		set<pair<Point, int> > visited;
+		visited.insert(make_pair(pivot, theta));
+		for (int i = 0; i < n; i++) {
+			int spellIx = spell[i] - '0';
+			if (spellIx < 4) {
+				pivot.y += dy[pivot.x%2][spellIx];
+				pivot.x += dx[spellIx];
+			} else {
+				theta = (theta + spellIx - 5 + turnNum) % turnNum;
+			}
+			if (!check(H, W, board.field, pivot, theta, unit)) {
+				return false;
+			}
+			auto p = make_pair(pivot, theta);
+			if (visited.count(p)) {
+				return false;
+			}
+			visited.insert(p);
+		}
+		return true;
+	}
+
 };
