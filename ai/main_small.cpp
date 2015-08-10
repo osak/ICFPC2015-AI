@@ -1,9 +1,8 @@
 ﻿#include "common.h"
-#include "io.h"
-#include "model/game.h"
+#include "io_small.h"
+#include "model/game_small.h"
 #include "model/result.h"
-#include "AI/lightningAI.h"
-#include "calc.h"
+#include "AI/lightningAI_small.h"
 
 using namespace std;
 

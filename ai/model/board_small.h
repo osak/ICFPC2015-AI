@@ -4,48 +4,43 @@
 
 using namespace std;
 
-typedef std::bitset<200> BitRow;
-
-/*
 class BitRow {
 public:
 
-    unsigned long long bits[2];
+    unsigned long long bits;
 
 	BitRow() {
-        reset();
+        bits = 0;
     }
 
 	inline int test(int index) const {
-        return (bits[index / 64] >> (index % 64)) & 1;
+        return (bits >> index) & 1;
 	}
 
     inline void set(int index) {
-        bits[index / 64] |= (1ULL << (index % 64));
+        bits |= (1ULL << index);
 	}
 
 	inline bool check(int width) const {
-        return popcount() == width;
+        return count() == width;
 	}
 
 	inline void reset(void) {
-        memset(bits, 0, sizeof(bits));
+        bits = 0;
 	}
 
 	inline int count() const {
 		int cnt = 0;
-        for (auto b : bits) {
+        auto b = bits;
 #ifdef _MSC_VER
-			while (b) ++cnt, b &= b - 1;
+		while (b) ++cnt, b &= b - 1;
 #else
-			cnt += __builtin_popcountll(b);
+		cnt += __builtin_popcountll(b);
 #endif
-		}
         
 		return cnt;
 	}
 };
-*/
 
 class Board {
 public:
