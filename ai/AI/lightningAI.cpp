@@ -90,20 +90,6 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(Table &table, State state, const char last) {
-    string commands(1, last);
-    
-    while (1) {
-        if ((table[state] & 15) == 15) break;
-        
-        commands += addCommand(table[state], state);
-    }
-    
-    reverse(commands.begin(), commands.end());
-    
-    return commands;
-}
-
 void LightningAI::debug(const Board &board) {
 	return;
     fprintf(stderr, "%d %d %d\n", board.currentScore, board.powerScore, board.expectedScore);
@@ -119,34 +105,13 @@ void LightningAI::debug(const Board &board) {
     fflush(stderr);
 }
 
-/*
-unsigned long long getHash(Point &pivot, int theta, Unit &unit) {
-    unsigned long long hash = 0;
-    vector <Point> points;
-    
-    for (int i = 0; i < unit.member.size(); i++) points.push_back(Util::get(pivot, theta, unit.member[i]));
-    
-    sort(points.begin(), points.end());
-    
-    points.push_back(pivot);
-    
-    for (int i = 0; i < points.size(); i++) {
-        hash = hash * 1009 + points[i].x;
-        hash = hash * 1009 + points[i].y;
-    }
-    
-    return hash;
-}
-*/
 
 typedef int(LightningEval::*pEvaluator)(Board &board, Board &nextBoard, int num);
 vector<pEvaluator> evaluators;
-vector<int> slotSizes;
 
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 0;
     string ans = "";
     priority_queue <State> queSearch;
     unordered_set <unsigned> states;
@@ -155,50 +120,58 @@ Result LightningAI::run(){
     
     LightningEval evaluator(game.H, game.W, game.units);
 
-	auto addEvaluator = [&](int(LightningEval::*pEvaluator)(Board &board, Board &nextBoard, int num), int slot) {
+	auto addEvaluator = [&](int(LightningEval::*pEvaluator)(Board &board, Board &nextBoard, int num)) {
 		evaluators.push_back(pEvaluator);
-		beamWidth += slot;
-		slotSizes.push_back(slot);
 	};
-	addEvaluator(&LightningEval::calcMaster, 7);
-	addEvaluator(&LightningEval::calcBuddha, 6);
-	addEvaluator(&LightningEval::calcGod, 4);
-	addEvaluator(&LightningEval::calcHole, 2);
-	addEvaluator(&LightningEval::calcRand, 1);
+	addEvaluator(&LightningEval::calcMaster);
+	addEvaluator(&LightningEval::calcBuddha);
+	addEvaluator(&LightningEval::calcGod);
+	addEvaluator(&LightningEval::calcHole);
+	addEvaluator(&LightningEval::calcRand);
 
 	int evNum = evaluators.size();
-	// int eachWidth = beamWidth + (evNum - 1) / evNum;
-	vector <priority_queue <Board, vector<Board>, greater<Board> > > ques(evNum);
-	priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
 
-	auto calcAndPick = [&](Board &board, Board &nextBoard, int num) {
-		for (int i = 0; i < evNum; ++i) {
-			auto &calc = evaluators[i];
-			nextBoard.expectedScore = (evaluator.*calc)(board, nextBoard, num);
-			// 同じ盤面を色んなqueueに突っ込むクソコードを書くやつがいるらしい
-			ques[i].push(nextBoard);
-			if (ques[i].size() > slotSizes[i]) ques[i].pop();
-		}
+    vector<vector<set<Board>>> chokudaiHeaps(evNum, vector<set<Board>>(game.units.size() + 1));
+    const int chokudaiHeapCapacity = 10;
+    const int chokudaiSearchLoops = 10;
+
+	auto capcu = [&](const int generation, const int turn, Board &board, Board &nextBoard) {
+			auto &calc = evaluators[generation % evNum];
+			nextBoard.expectedScore = (evaluator.*calc)(board, nextBoard, turn);
+			for (int i = 0; i < evNum; i++) {
+				set<Board> &heap = chokudaiHeaps[i][turn];
+				heap.insert(nextBoard);
+				while (heap.size() > chokudaiHeapCapacity) {
+					heap.erase(heap.begin());
+				}
+			}
 	};
 
 	game.board.expectedScore = 0;
-    que.push(game.board);
+	for (int i = 0; i < evNum; i++) {
+		chokudaiHeaps[i][0].insert(game.board);
+	}
 
-    for (i = 0; i < game.units.size(); i++) {
-        int turnNum = getTurnNum(game.units[i]);
-        
-        states.clear();
-        
-		for (j = 0; j < beamWidth && !que.empty(); j++) {
-            Board board = que.top();
-            
-            que.pop();
-            
+    for (int _ = 0; _ < chokudaiSearchLoops; ++_) {
+        for (i = 0; i < game.units.size(); i++) {
+            int turnNum = getTurnNum(game.units[i]);
+            set<Board> &heap = chokudaiHeaps[_%evNum][i]; /*******?*/
+            states.clear();
+
+            if (heap.empty()) {
+                continue;
+            }
+
+            auto board_iterator = heap.end(); board_iterator--;
+            Board board = *board_iterator;
+
+            heap.erase(board_iterator);
+
             debug(board);
 
             valid.clear();
             table.clear();
-            
+
             if (board.currentScore + board.powerScore > maxScore) {
                 maxScore = board.currentScore + board.powerScore;
                 ans = board.commands;
@@ -259,37 +232,34 @@ Result LightningAI::run(){
                 bool insert = false;
                 int flag = 0;
                 State state = queSearch.top();
-                
+
                 queSearch.pop();
                 
                 if (table.visited(state)) continue;
                 table[state] |= 1;
-                
-                
                 // 移動
                 for (k = 0; k < 4; k++) {
                     Point pivot = state.pivot;
-                    
+
                     pivot.x += Util::dx[k];
                     pivot.y += Util::dy[state.pivot.x % 2][k];
                     
                     if (!isValid(pivot, state.theta)) {
                         if (insert) continue;
-                        
+
                         insert = true;
                         Board nextBoard = board;
-                        
+
                         update(nextBoard, state.pivot, state.theta, game.units[i]);
-                        
+
                         if (states.count(nextBoard.hash)) continue;
                         states.insert(nextBoard.hash);
-                        
+
                         nextBoard.powerScore += state.power;
                         setCommand(nextBoard, state, Util::commandMove[k]);
-								calcAndPick(board, nextBoard, i + 1);
+								capcu(_, i + 1, board, nextBoard);
                     } else {
                         if (k <= 1 && state.bannedPivot == pivot.y && state.bannedTheta == state.theta) continue;
-                        
                         State nextState(state.power, pivot, state.theta, state.bannedPivot, state.bannedTheta);
                         if (k >= 2) {
                             nextState.bannedPivot = 0;
@@ -306,18 +276,15 @@ Result LightningAI::run(){
                         queSearch.push(nextState);
                     }
                 }
-                
+
                 // フレーズ (3方向に移動可能なときにei!を唱えられる)
                 if ((flag & 13) == 13) {
                     State nextState1 = state;
-                    
                     nextState1.pivot.x += Util::dx[0];
                     nextState1.pivot.y += Util::dy[state.pivot.x % 2][0];
                     nextState1.bannedPivot = 1;
                     nextState1.bannedTheta = 6;
-                    
                     State nextState2 = nextState1;
-                    
                     nextState2.pivot.x += Util::dx[3];
                     nextState2.pivot.y += Util::dy[state.pivot.x % 2][3];
                     nextState2.bannedPivot = nextState2.pivot.y;
@@ -337,7 +304,7 @@ Result LightningAI::run(){
                         queSearch.push(nextState3);
                     }
                 }
-                
+
                 // 回転
                 for (k = -1; k <= 1; k++) {
                     if (k == 0) continue;
@@ -349,15 +316,15 @@ Result LightningAI::run(){
                         
                         insert = true;
                         Board nextBoard = board;
-                        
+
                         update(nextBoard, state.pivot, state.theta, game.units[i]);
-                        
+
                         if (states.count(nextBoard.hash)) continue;
                         states.insert(nextBoard.hash);
-                        
+
                         nextBoard.powerScore += state.power;
                         setCommand(nextBoard, state, Util::commandRotate[k + 1]);
-								calcAndPick(board, nextBoard, i + 1);
+								capcu(_, i + 1, board, nextBoard);
                     } else {
                         if (state.bannedPivot == state.pivot.y && state.bannedTheta == theta) continue;
                         
@@ -366,41 +333,25 @@ Result LightningAI::run(){
                         if (table.visited(nextState)) continue;
                         
                         if (table.getValue(nextState) >= state.power) continue;
-                        
                         table[nextState] = computeData(nextState.power, state, Util::commandRotate[k + 1]);
                         queSearch.push(nextState);
                     }
                 }
             }
         }
-        
-        while (!que.empty()) {
-            if (que.top().currentScore + que.top().powerScore > maxScore) {
-                maxScore = que.top().currentScore + que.top().powerScore;
-                ans = que.top().commands;
-            }
-            
-            que.pop();
-        }
-       
-		// merge2
-		for (int i = 0; i < evNum; ++i) {
-			while (!ques[i].empty()){
-				queNext.push(ques[i].top());
-				ques[i].pop();
-			}
-		}
-        swap(que, queNext);
     }
-    
-    while (!que.empty()) {
-        if (que.top().currentScore + que.top().powerScore > maxScore) {
-            maxScore = que.top().currentScore + que.top().powerScore;
-            ans = que.top().commands;
-        }
-        
-        que.pop();
-    }
+
+	for (auto &myChoku : chokudaiHeaps) {
+		 for (auto &que : myChoku) {
+			  for (auto &top : que) {
+					if (top.currentScore + top.powerScore > maxScore) {
+						 maxScore = top.currentScore + top.powerScore;
+						 ans = top.commands;
+					}
+
+			  }
+		 }
+	}
     
     //fprintf(stderr, "%d\n", maxScore);
     //fflush(stderr);
