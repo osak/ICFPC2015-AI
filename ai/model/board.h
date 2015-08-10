@@ -50,7 +50,7 @@ public:
 	int previousLine;
     int powerScore;
 	int expectedScore;
-	unsigned long long hash;
+	unsigned hash;
 	string commands;
 	vector <BitRow> field;
 

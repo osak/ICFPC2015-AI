@@ -77,6 +77,15 @@ public:
     bool count(const State &key) const {
         return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].first == turn;
     }
+    
+    bool visited(const State &key) const {
+        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].first == turn && (table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].second & 1);
+    }
+    
+    int getValue(const State &key) const {
+        if (table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].first != turn) return -1;
+        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].second >> 39;
+    }
 
     void clear() {
         ++turn;

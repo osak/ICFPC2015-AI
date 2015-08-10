@@ -104,7 +104,7 @@ Game createGameFromInput() {
     boardHash.resize(H);
     for (i = 0; i < H; i++) {
         boardHash[i].resize(W);
-		for (j = 0; j < W; j++) boardHash[i][j] = ((unsigned long long)Util::GetRandom() << 32) | Util::GetRandom();
+		for (j = 0; j < W; j++) boardHash[i][j] = Util::GetRandom();
     }
     
     initBoard.hash = 0;

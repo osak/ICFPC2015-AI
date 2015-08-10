@@ -23,37 +23,22 @@ int getTurnNum(Unit &unit) {
     return 6;
 }
 
-inline unsigned getHash(State &state) {
-    unsigned hash = 0;
-    
-    hash |= (unsigned)(state.pivot.x + 10) << 22;
-    hash |= (unsigned)(state.pivot.y + 10) << 14;
-    hash |= (unsigned)state.theta << 11;
-    hash |= (unsigned)(state.bannedPivot + 10) << 3;
-    hash |= (unsigned)state.bannedTheta;
-    
-    return hash;
-}
-
 inline unsigned long long computeData(int value, State &state, char command) {
     unsigned long long data = 0;
     
-    data |= (unsigned long long)value << 38;
-    data |= (unsigned long long)command << 30;
-    data |= (unsigned long long)(state.pivot.x + 10) << 22;
-    data |= (unsigned long long)(state.pivot.y + 10) << 14;
-    data |= (unsigned long long)state.theta << 11;
-    data |= (unsigned long long)(state.bannedPivot + 10) << 3;
-    data |= (unsigned long long)state.bannedTheta;
+    data |= (unsigned long long)value << 39;
+    data |= (unsigned long long)command << 31;
+    data |= (unsigned long long)(state.pivot.x + 10) << 23;
+    data |= (unsigned long long)(state.pivot.y + 10) << 15;
+    data |= (unsigned long long)state.theta << 12;
+    data |= (unsigned long long)(state.bannedPivot + 10) << 4;
+    data |= (unsigned long long)state.bannedTheta << 1;
     
     return data;
 }
 
-inline int getValue(unsigned long long data) {
-    return data >> 38;
-}
-
-char addCommand(unsigned long long data, State &state) {
+inline char addCommand(unsigned long long data, State &state) {
+    data >>= 1;
     state.bannedTheta = data & 7;
     data >>= 3;
     state.bannedPivot = (int)(data & 255) - 10;
@@ -109,7 +94,7 @@ string LightningAI::getCommand(Table &table, State state, const char last) {
     string commands(1, last);
     
     while (1) {
-        if (!table.count(state)) break;
+        if ((table[state] & 15) == 15) break;
         
         commands += addCommand(table[state], state);
     }
@@ -137,15 +122,14 @@ void LightningAI::debug(const Board &board) {
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 1;
+    int beamWidth = 10;
     string ans = "";
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
-    unordered_set <unsigned long long> states;
-    unordered_set <unsigned> visited;
-    ValidTable valid;
-    Table table;
+    unordered_set <unsigned> states;
+    static ValidTable valid;
+    static Table table;
     
     LightningEval evaluator(game.H, game.W, game.units);
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
@@ -189,21 +173,19 @@ Result LightningAI::run(){
             
             if (!isValid(game.units[i].pivot, 0)) continue;
             
-            visited.clear();
-            
+            table[State(0, game.units[i].pivot, 0, 0, 6)] = 14;
             queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
             
             while (!queSearch.empty()) {
                 bool insert = false;
                 int flag = 0;
-                unsigned hash;
                 State state = queSearch.top();
                 
                 queSearch.pop();
                 
-                hash = getHash(state);
-                if (visited.count(hash)) continue;
-                visited.insert(hash);
+                if (table.visited(state)) continue;
+                table[state] |= 1;
+                
                 
                 // 移動
                 for (k = 0; k < 4; k++) {
@@ -236,11 +218,11 @@ Result LightningAI::run(){
                             nextState.bannedTheta = 6;
                         }
                         
-                        if (visited.count(getHash(nextState))) continue;
+                        if (table.visited(nextState)) continue;
                         
                         flag |= (1 << k);
                         
-                        if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
+                        if (table.getValue(nextState) >= state.power) continue;
                         
                         table[nextState] = computeData(nextState.power, state, Util::commandMove[k]);
                         queSearch.push(nextState);
@@ -274,7 +256,7 @@ Result LightningAI::run(){
                         nextState3.power += 6;
                     }
                     
-                    if (!table.count(nextState3) || getValue(table[nextState3]) < nextState3.power) {
+                    if (table.getValue(nextState3) < nextState3.power) {
                         table[nextState1] = computeData(nextState1.power, state, Util::commandMove[0]);
                         table[nextState2] = computeData(nextState2.power, nextState1, Util::commandMove[3]);
                         table[nextState3] = computeData(nextState3.power, nextState2, Util::commandMove[1]);
@@ -308,9 +290,9 @@ Result LightningAI::run(){
                         
                         State nextState(state.power, state.pivot, theta, state.bannedPivot, state.bannedTheta);
                         
-                        if (visited.count(getHash(nextState))) continue;
+                        if (table.visited(nextState)) continue;
                         
-                        if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
+                        if (table.getValue(nextState) >= state.power) continue;
                         
                         table[nextState] = computeData(nextState.power, state, Util::commandRotate[k + 1]);
                         queSearch.push(nextState);
