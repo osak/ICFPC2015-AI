@@ -67,7 +67,7 @@ string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point,
 }
 
 void LightningAI::debug(const Board &board) {
-	//return;
+	return;
     fprintf(stderr, "%d %d %d\n", board.currentScore, board.powerScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < game.H; i++) {
@@ -99,7 +99,7 @@ unsigned long long getHash(Point &pivot, int theta, Unit &unit) {
     return hash;
 }
 
-typedef int(LightningEval::*pEvaluator)(vector <BitRow> &field, int num);
+typedef int(LightningEval::*pEvaluator)(Board &board, Board &nextBoard, int num);
 vector<pEvaluator> evaluators;
 vector<int> slotSizes;
 
@@ -112,28 +112,28 @@ Result LightningAI::run(){
     
     LightningEval evaluator(game.H, game.W, game.units);
 
-	auto addEvaluator = [&](int(LightningEval::*pEvaluator)(vector <BitRow> &field, int num), int slot) {
+	auto addEvaluator = [&](int(LightningEval::*pEvaluator)(Board &board, Board &nextBoard, int num), int slot) {
 		evaluators.push_back(pEvaluator);
 		beamWidth += slot;
 		slotSizes.push_back(slot);
 	};
-	addEvaluator(&LightningEval::calcMaster, 16);
-	//addEvaluator(&LightningEval::calcBuddha, 5);
-	//addEvaluator(&LightningEval::calcGod, 4);
-	addEvaluator(&LightningEval::calcHole, 4);
-	//addEvaluator(&LightningEval::calcRand, 2);
+	addEvaluator(&LightningEval::calcMaster, 7);
+	addEvaluator(&LightningEval::calcBuddha, 6);
+	addEvaluator(&LightningEval::calcGod, 4);
+	addEvaluator(&LightningEval::calcHole, 2);
+	addEvaluator(&LightningEval::calcRand, 1);
 
 	int evNum = evaluators.size();
 	// int eachWidth = beamWidth + (evNum - 1) / evNum;
 	vector <priority_queue <Board, vector<Board>, greater<Board> > > ques(evNum);
 	priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
 
-	auto calcAndPick = [&](Board &board, int num) {
+	auto calcAndPick = [&](Board &board, Board &nextBoard, int num) {
 		for (int i = 0; i < evNum; ++i) {
 			auto &calc = evaluators[i];
-			board.expectedScore = (evaluator.*calc)(board.field, num);
+			nextBoard.expectedScore = (evaluator.*calc)(board, nextBoard, num);
 			// 同じ盤面を色んなqueueに突っ込むクソコードを書くやつがいるらしい
-			ques[i].push(board);
+			ques[i].push(nextBoard);
 			if (ques[i].size() > slotSizes[i]) ques[i].pop();
 		}
 	};
@@ -203,7 +203,7 @@ Result LightningAI::run(){
                         
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandMove[k]);
-								calcAndPick(nextBoard, i + 1);
+								calcAndPick(board, nextBoard, i + 1);
                     }
                 }
                 
@@ -253,7 +253,7 @@ Result LightningAI::run(){
                         
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(parent, state.pivot, state.theta, Util::commandRotate[k + 1]);
-								calcAndPick(nextBoard, i + 1);
+								calcAndPick(board, nextBoard, i + 1);
 						}
                }
             }
@@ -267,8 +267,8 @@ Result LightningAI::run(){
             
             que.pop();
         }
-        
-		// merge
+       
+		// merge2
 		for (int i = 0; i < evNum; ++i) {
 			while (!ques[i].empty()){
 				queNext.push(ques[i].top());

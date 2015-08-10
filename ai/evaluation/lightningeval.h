@@ -33,13 +33,13 @@ public:
 		}
 		safeUnits = maxUnitSize <= 4;
 	}
-	int calcMaster(vector <BitRow> &field, int num);
-	int calcGod(vector <BitRow> &field, int num);
-	int calcBuddha(vector <BitRow> &field, int num);
-	int calcRand(vector <BitRow> &f, int num);
-	int calcKawatea(vector <BitRow> &f, int num);
-	int calcDangerChance(vector <BitRow> &f, int num);
-	int calcHole(vector <BitRow> &f, int num);
+	int calcMaster(Board &board, Board &nextBoard, int num);
+	int calcGod(Board &board, Board &nextBoard, int num);
+	int calcBuddha(Board &board, Board &nextBoard, int num);
+	int calcRand(Board &f, Board &nextBoard, int num);
+	int calcKawatea(Board &f, Board &nextBoard, int num);
+	int calcDangerChance(Board &f, Board &nextBoard, int num);
+	int calcHole(Board &f, Board &nextBoard, int num);
 };
 
 
