@@ -11,9 +11,9 @@ int LightningEval::kawateaScore(const vector <BitRow> &f) {
 	};
 #endif
 	int sum = 0;
-    unsigned long long a = f[0].bits;
+    unsigned long long a = f[0].bits[0];
 	for (int x = 0; x < H - 1; ++x) {
-		auto b = f[x + 1].bits;
+		auto b = f[x + 1].bits[0];
 		if(x%2 == 0) sum += __builtin_popcountll(a & (a >> 1) & (~b));
 		else sum += __builtin_popcountll(a & (a << 1) & (~b));
 		a = b;

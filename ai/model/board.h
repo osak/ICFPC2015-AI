@@ -7,18 +7,18 @@ using namespace std;
 class BitRow {
 public:
 
-    unsigned long long bits;
+    unsigned long long bits[2];
 
 	BitRow() {
-        bits = 0;
+        clear();
     }
 
 	inline int get(int index) const {
-        return (bits >> index) & 1;
+        return (bits[index / 64] >> (index % 64)) & 1;
 	}
 
-	inline void set(int index) {
-        bits |= (1ULL << index);
+    inline void set(int index) {
+        bits[index / 64] |= (1ULL << (index % 64));
 	}
 
 	inline bool check(int width) const {
@@ -26,17 +26,19 @@ public:
 	}
 
 	inline void clear(void) {
-        bits = 0;
+        memset(bits, 0, sizeof(bits));
 	}
 
 	inline int popcount() const {
 		int cnt = 0;
-        auto b = bits;
+        for (auto b : bits) {
 #ifdef _MSC_VER
-		while (b) ++cnt, b &= b - 1;
+			while (b) ++cnt, b &= b - 1;
 #else
-		cnt += __builtin_popcountll(b);
+			cnt += __builtin_popcountll(b);
 #endif
+		}
+        
 		return cnt;
 	}
 };

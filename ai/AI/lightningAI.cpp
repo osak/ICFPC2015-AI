@@ -3,6 +3,71 @@
 
 using namespace std;
 
+int getTurnNum(Unit &unit) {
+    set <vector <Point> > visited;
+    
+    for (int i = 0; i < 6; i++) {
+        vector <Point> points;
+        
+        for (int j = 0; j < unit.member.size(); j++) points.push_back(Util::get(unit.pivot, i, unit.member[j]));
+        
+        sort(points.begin(), points.end());
+        
+        points.push_back(unit.pivot);
+        
+        if (visited.count(points)) return i;
+        
+        visited.insert(points);
+    }
+    
+    return 6;
+}
+
+inline unsigned getHash(State &state) {
+    unsigned hash = 0;
+    
+    hash |= (unsigned)(state.pivot.x + 10) << 22;
+    hash |= (unsigned)(state.pivot.y + 10) << 14;
+    hash |= (unsigned)state.theta << 11;
+    hash |= (unsigned)(state.bannedPivot + 10) << 3;
+    hash |= (unsigned)state.bannedTheta;
+    
+    return hash;
+}
+
+inline unsigned long long computeData(int value, State &state, char command) {
+    unsigned long long data = 0;
+    
+    data |= (unsigned long long)value << 38;
+    data |= (unsigned long long)command << 30;
+    data |= (unsigned long long)(state.pivot.x + 10) << 22;
+    data |= (unsigned long long)(state.pivot.y + 10) << 14;
+    data |= (unsigned long long)state.theta << 11;
+    data |= (unsigned long long)(state.bannedPivot + 10) << 3;
+    data |= (unsigned long long)state.bannedTheta;
+    
+    return data;
+}
+
+inline int getValue(unsigned long long data) {
+    return data >> 38;
+}
+
+char addCommand(unsigned long long data, State &state) {
+    state.bannedTheta = data & 7;
+    data >>= 3;
+    state.bannedPivot = (int)(data & 255) - 10;
+    data >>= 8;
+    state.theta = data & 7;
+    data >>= 3;
+    state.pivot.y = (int)(data & 255) - 10;
+    data >>= 8;
+    state.pivot.x = (int)(data & 255) - 10;
+    data >>= 8;
+    
+    return data & 255;
+}
+
 void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit &unit) {
     int count = 0, point, i, j;
     
@@ -46,8 +111,7 @@ string LightningAI::getCommand(Table &table, State state, const char last) {
     while (1) {
         if (!table.count(state)) break;
         
-        commands += table[state].command;
-        state = table[state].parent;
+        commands += addCommand(table[state], state);
     }
     
     reverse(commands.begin(), commands.end());
@@ -68,38 +132,6 @@ void LightningAI::debug(const Board &board) {
     }
     fprintf(stderr, "\n");
     fflush(stderr);
-}
-
-int getTurnNum(Unit &unit) {
-    set <vector <Point> > visited;
-    
-    for (int i = 0; i < 6; i++) {
-        vector <Point> points;
-        
-        for (int j = 0; j < unit.member.size(); j++) points.push_back(Util::get(unit.pivot, i, unit.member[j]));
-        
-        sort(points.begin(), points.end());
-        
-        points.push_back(unit.pivot);
-        
-        if (visited.count(points)) return i;
-        
-        visited.insert(points);
-    }
-    
-    return 6;
-}
-
-unsigned getHash(State &state) {
-    unsigned hash = 0;
-    
-    hash |= (unsigned)state.pivot.x << 22;
-    hash |= (unsigned)state.pivot.y << 14;
-    hash |= (unsigned)state.theta << 11;
-    hash |= (unsigned)state.bannedPivot << 3;
-    hash |= (unsigned)state.bannedTheta;
-    
-    return hash;
 }
 
 Result LightningAI::run(){
@@ -208,9 +240,9 @@ Result LightningAI::run(){
                         
                         flag |= (1 << k);
                         
-                        if (table.count(nextState) && table[nextState].value >= state.power) continue;
+                        if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
                         
-                        table[nextState] = Data(nextState.power, state, Util::commandMove[k]);
+                        table[nextState] = computeData(nextState.power, state, Util::commandMove[k]);
                         queSearch.push(nextState);
                     }
                 }
@@ -242,10 +274,10 @@ Result LightningAI::run(){
                         nextState3.power += 6;
                     }
                     
-                    if (!table.count(nextState3) || table[nextState3].value < nextState3.power) {
-                        table[nextState1] = Data(nextState1.power, state, Util::commandMove[0]);
-                        table[nextState2] = Data(nextState2.power, nextState1, Util::commandMove[3]);
-                        table[nextState3] = Data(nextState3.power, nextState2, Util::commandMove[1]);
+                    if (!table.count(nextState3) || getValue(table[nextState3]) < nextState3.power) {
+                        table[nextState1] = computeData(nextState1.power, state, Util::commandMove[0]);
+                        table[nextState2] = computeData(nextState2.power, nextState1, Util::commandMove[3]);
+                        table[nextState3] = computeData(nextState3.power, nextState2, Util::commandMove[1]);
                         queSearch.push(nextState3);
                     }
                 }
@@ -278,9 +310,9 @@ Result LightningAI::run(){
                         
                         if (visited.count(getHash(nextState))) continue;
                         
-                        if (table.count(nextState) && table[nextState].value >= state.power) continue;
+                        if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
                         
-                        table[nextState] = Data(nextState.power, state, Util::commandRotate[k + 1]);
+                        table[nextState] = computeData(nextState.power, state, Util::commandRotate[k + 1]);
                         queSearch.push(nextState);
                     }
                 }

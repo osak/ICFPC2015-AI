@@ -5,7 +5,7 @@
 #include "unit.h"
 #include "state.h"
 
-const int MAX_BOARD_SIZE = 50;
+const int MAX_BOARD_SIZE = 100;
 const int MARGIN = 10;
 class ValidTable {
     pair<int, int> table[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6];
@@ -43,21 +43,8 @@ public:
     }
 };
 
-class Data {
-    public:
-    
-    int value;
-    State parent;
-    char command;
-    
-    Data() {}
-    
-    Data(int value, State &parent, char command) : value(value), parent(parent), command(command) {}
-};
-
 class Table {
-    int last[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
-    Data table[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
+    pair <int, unsigned long long> table[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
     int turn;
 
 public:
@@ -67,7 +54,7 @@ public:
                 for (int k = 0; k < 6; ++k) {
                     for (int l = 0; l < MAX_BOARD_SIZE + MARGIN * 2; ++l) {
                         for (int r = 0; r < 7; r++) {
-                            last[i][j][k][l][r] = -1;
+                            table[i][j][k][l][r] = make_pair(-1, 0);
                         }
                     }
                 }
@@ -76,19 +63,19 @@ public:
         turn = 0;
     }
 
-    Data operator[](const State &key) const {
+    unsigned long long operator[](const State &key) const {
         // Here assumes given key is **valid** one; must be already inserted.
-        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta];
+        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].second;
     }
 
-    Data& operator[](const State &key) {
+    unsigned long long& operator[](const State &key) {
         // Here assumes value always to be set when caller requires lvalue.
-        last[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta] = turn;
-        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta];
+        table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].first = turn;
+        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].second;
     }
 
     bool count(const State &key) const {
-        return last[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta] == turn;
+        return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta].first == turn;
     }
 
     void clear() {
