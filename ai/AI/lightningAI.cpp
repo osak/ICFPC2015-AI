@@ -118,12 +118,10 @@ Result LightningAI::run(){
 		slotSizes.push_back(slot);
 	};
 
-	int k = 10;
-
-	addEvaluator(&LightningEval::calcMaster, 3 * k);
-	addEvaluator(&LightningEval::calcGod, 3 * k);
-	addEvaluator(&LightningEval::calcBuddha, 3 * k);
-	addEvaluator(&LightningEval::calcRand, k);
+	addEvaluator(&LightningEval::calcMaster, 30);
+	addEvaluator(&LightningEval::calcGod, 30);
+	addEvaluator(&LightningEval::calcBuddha, 30);
+	addEvaluator(&LightningEval::calcRand, 10);
 
 	int evNum = evaluators.size();
 	// int eachWidth = beamWidth + (evNum - 1) / evNum;
