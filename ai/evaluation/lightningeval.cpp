@@ -153,7 +153,7 @@ int LightningEval::calcHole(Board &board, Board &nextBoard, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-	int val = (nextBoard.currentScore - board.currentScore) / 100;
+	int val = 0;
 	int holeY = -1, holeX = -1;
 	for (int y = H-1; y >= 0; y--) {
 		if (field[y].count() == W-1) {
