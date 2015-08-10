@@ -40,16 +40,14 @@ void LightningAI::update(Board &board, const Point &pivot, int theta, const Unit
     board.previousLine = count;
 }
 
-string LightningAI::getCommand(Table <pair<State, char> > &parent, State state, const char last) {
+string LightningAI::getCommand(Table &table, State state, const char last) {
     string commands(1, last);
     
     while (1) {
-        if (!parent.count(state)) break;
+        if (!table.count(state)) break;
         
-        pair <State, char> par = parent[state];
-        
-        commands += par.second;
-        state = par.first;
+        commands += table[state].command;
+        state = table[state].parent;
     }
     
     reverse(commands.begin(), commands.end());
@@ -113,8 +111,7 @@ Result LightningAI::run(){
     priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
     ValidTable valid;
-    Table <pair<State, char> > parent;
-    Table <int> value;
+    Table table;
     
     LightningEval evaluator(game.H, game.W, game.units);
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
@@ -144,8 +141,7 @@ Result LightningAI::run(){
             debug(board);
             
             valid.clear();
-            parent.clear();
-            value.clear();
+            table.clear();
             
             if (board.currentScore + board.powerScore > maxScore) {
                 maxScore = board.currentScore + board.powerScore;
@@ -159,7 +155,6 @@ Result LightningAI::run(){
             
             if (!isValid(game.units[i].pivot, 0)) continue;
             
-            value[State(0, game.units[i].pivot, 0, 0, 6)] = 0;
             queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
             
             while (!queSearch.empty()) {
@@ -193,7 +188,7 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(parent, state, Util::commandMove[k]);
+                        nextBoard.commands += getCommand(table, state, Util::commandMove[k]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						varietyUpdate(nextBoard);
                     } else {
@@ -209,10 +204,9 @@ Result LightningAI::run(){
                         
                         flag |= (1 << k);
                         
-                        if (value.count(nextState) && value[nextState] >= state.power) continue;
+                        if (table.count(nextState) && table[nextState].value >= state.power) continue;
                         
-                        value[nextState] = nextState.power;
-                        parent[nextState] = make_pair(state, Util::commandMove[k]);
+                        table[nextState] = Data(nextState.power, state, Util::commandMove[k]);
                         queSearch.push(nextState);
                     }
                 }
@@ -244,13 +238,10 @@ Result LightningAI::run(){
                         nextState3.power += 6;
                     }
                     
-                    if (!value.count(nextState3) || value[nextState3] < nextState3.power) {
-                        value[nextState1] = nextState1.power;
-                        parent[nextState1] = make_pair(state, Util::commandMove[0]);
-                        value[nextState2] = nextState2.power;
-                        parent[nextState2] = make_pair(nextState1, Util::commandMove[3]);
-                        value[nextState3] = nextState3.power;
-                        parent[nextState3] = make_pair(nextState2, Util::commandMove[1]);
+                    if (!table.count(nextState3) || table[nextState3].value < nextState3.power) {
+                        table[nextState1] = Data(nextState1.power, state, Util::commandMove[0]);
+                        table[nextState2] = Data(nextState2.power, nextState1, Util::commandMove[3]);
+                        table[nextState3] = Data(nextState3.power, nextState2, Util::commandMove[1]);
                         queSearch.push(nextState3);
                     }
                 }
@@ -273,7 +264,7 @@ Result LightningAI::run(){
                         states.insert(nextBoard.hash);
                         
                         nextBoard.powerScore += state.power;
-                        nextBoard.commands += getCommand(parent, state, Util::commandRotate[k + 1]);
+                        nextBoard.commands += getCommand(table, state, Util::commandRotate[k + 1]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
 						varietyUpdate(nextBoard);
                     } else {
@@ -283,10 +274,9 @@ Result LightningAI::run(){
                         
                         if (visited.count(getHash(nextState))) continue;
                         
-                        if (value.count(nextState) && value[nextState] >= state.power) continue;
+                        if (table.count(nextState) && table[nextState].value >= state.power) continue;
                         
-                        value[nextState] = nextState.power;
-                        parent[nextState] = make_pair(state, Util::commandRotate[k + 1]);
+                        table[nextState] = Data(nextState.power, state, Util::commandRotate[k + 1]);
                         queSearch.push(nextState);
                     }
                 }

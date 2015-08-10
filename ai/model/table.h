@@ -43,10 +43,21 @@ public:
     }
 };
 
-template <class Type>
+class Data {
+    public:
+    
+    int value;
+    State parent;
+    char command;
+    
+    Data() {}
+    
+    Data(int value, State &parent, char command) : value(value), parent(parent), command(command) {}
+};
+
 class Table {
     int last[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
-    Type table[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
+    Data table[MAX_BOARD_SIZE+MARGIN*2][MAX_BOARD_SIZE+MARGIN*2][6][MAX_BOARD_SIZE+MARGIN*2][7];
     int turn;
 
 public:
@@ -65,12 +76,12 @@ public:
         turn = 0;
     }
 
-    Type operator[](const State &key) const {
+    Data operator[](const State &key) const {
         // Here assumes given key is **valid** one; must be already inserted.
         return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta];
     }
 
-    Type& operator[](const State &key) {
+    Data& operator[](const State &key) {
         // Here assumes value always to be set when caller requires lvalue.
         last[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta] = turn;
         return table[key.pivot.x+MARGIN][key.pivot.y+MARGIN][key.theta][key.bannedPivot][key.bannedTheta];

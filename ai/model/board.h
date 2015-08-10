@@ -1,15 +1,17 @@
 #pragma once
 #include "../common.h"
+#include <cstring>
 
 using namespace std;
 
 class BitRow {
 public:
 
-	vector <unsigned long long> bits;
+    unsigned long long bits[2];
 
-	BitRow(int size) : bits((size + 63) / 64) {
-	}
+	BitRow() {
+        clear();
+    }
 
 	inline int get(int index) const {
 		return (bits[index / 64] >> (index % 64)) & 1;
@@ -20,21 +22,11 @@ public:
 	}
 
 	inline bool check(int width) const {
-		int i;
-
-		for (i = 0; i < width / 64; i++) {
-			if (bits[i] != ~0ULL) return false;
-		}
-
-		if (i < bits.size()) {
-			if (bits[i] != (1ULL << (width % 64)) - 1) return false;
-		}
-
-		return true;
+        return popcount() == width;
 	}
 
 	inline void clear(void) {
-		for (int i = 0; i < bits.size(); i++) bits[i] = 0;
+        memset(bits, 0, sizeof(bits));
 	}
 
 	inline int popcount() const {
