@@ -9,6 +9,7 @@ using namespace std;
 class Game {
 public:
 	int H, W;
+    double time;
 	vector <vector <unsigned> > boardHash;
 	Board board;
 	// ユニット（流れてくる順）

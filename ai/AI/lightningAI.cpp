@@ -133,8 +133,7 @@ Result LightningAI::run(){
 
     vector<vector<set<Board>>> chokudaiHeaps(evNum, vector<set<Board>>(game.units.size() + 1));
     const int chokudaiHeapCapacity = 10;
-    const int chokudaiSearchLoops = 10;
-
+    
 	auto capcu = [&](const int generation, const int turn, Board &board, Board &nextBoard) {
 			auto &calc = evaluators[order[generation % order.size()]];
 			nextBoard.expectedScore = (evaluator.*calc)(board, nextBoard, turn);
@@ -152,7 +151,7 @@ Result LightningAI::run(){
 		chokudaiHeaps[i][0].insert(game.board);
 	}
 
-    for (int _ = 0; _ < chokudaiSearchLoops; ++_) {
+    for (int _ = 0; ; ++_) {
         for (i = 0; i < game.units.size(); i++) {
             int turnNum = getTurnNum(game.units[i]);
             set<Board> &heap = chokudaiHeaps[order[_%order.size()]][i];
@@ -338,6 +337,8 @@ Result LightningAI::run(){
                     }
                 }
             }
+            
+            if (Util::get_time() < game.time - 1) break;
         }
     }
 

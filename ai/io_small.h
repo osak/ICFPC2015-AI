@@ -143,7 +143,11 @@ Game createGameFromInput() {
 		 game.spells.push_back(original);
 		 game.spellLens.push_back(len);
 	 }
-    
+     
+     scanf("%lf", &game.time);
+     
+     game.time += Util::get_time();
+     
 	initBoard.currentScore = 0;
 	initBoard.previousLine = 0;
     initBoard.powerScore = 0;

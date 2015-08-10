@@ -3,6 +3,7 @@
 #include "common.h"
 #include "model/board_small.h"
 #include "model/unit.h"
+#include <sys/time.h>
 
 using namespace std;
 
@@ -35,6 +36,15 @@ public:
 		return w;
 	}
 
+    static inline double get_time(void)
+    {
+        struct timeval tv;
+        
+        gettimeofday(&tv, NULL);
+        
+        return tv.tv_sec + tv.tv_usec * 1e-6;
+    }
+    
 	// pivot からの相対座標に対する絶対座標を求める
 	static Point get(const Point &pivot, int x, int y) {
 		Point point;
