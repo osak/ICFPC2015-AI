@@ -338,7 +338,7 @@ Result LightningAI::run(){
                 }
             }
             
-            if (Util::get_time() < game.time - 1) break;
+            if (Util::get_time() > game.time - 1) break;
         }
     }
 
