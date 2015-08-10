@@ -74,8 +74,6 @@ int LightningEval::chanceScore(const vector <BitRow> &f, int leftTurn) {
 int LightningEval::buddhaScore(const vector <BitRow> &f){
 	int val = 0;
 	for (int y = 0; y < H; y++) {
-		int n = f[y].count();
-		val += n ? (n * n - W * W) * (H - y) * 4 / (y + 1) : 0;
 		for (int x = 0; x < W; x++) {
 			if (!f[y][x]) {
 				int s =
@@ -89,7 +87,16 @@ int LightningEval::buddhaScore(const vector <BitRow> &f){
 			}
 		}
 	}
-	return val/10;
+	return val / 10;
+}
+
+int LightningEval::messiahScore(const vector <BitRow> &f) {
+	int val = 0;
+	for (int y = 0; y < H; y++) {
+		int n = f[y].count();
+		val += n ? (n * n - W * W) * (H - y) * 4 / (y + 1) : 0;
+	}
+	return val / 10;
 }
 
 int LightningEval::calcRand(vector <BitRow> &f, int num) {
@@ -115,7 +122,7 @@ int LightningEval::calcGod(vector <BitRow> &field, int num){
 		+ (field[y] ^ (y == 0 ? 0 : (y & 1 ? field[y - 1] >> 1 : field[y - 1] << 1))).count();
 		ret -= power * loc * special;
 	}
-	return ret / W;
+	return ret;
 }
 
 int LightningEval::calcMaster(vector <BitRow> &field, int num){
@@ -130,19 +137,61 @@ int LightningEval::calcBuddha(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-	return heightScore(field) + buddhaScore(field);
+	return heightScore(field) + buddhaScore(field) + messiahScore(field);
 }
 
-int LightningEval::calcKawatea(vector <BitRow> &field, int num){
+int LightningEval::calcHole(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-	return kawateaScore(field);
-}
-
-int LightningEval::calcDangerChance(vector <BitRow> &field, int num){
-	if (num == units.size()) return 0;
-	Unit &next = units[num];
-	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-	return dangerScore(field) + chanceScore(field, units.size() - num);
+	int holeY = -1, holeX = -1;
+	int val = 0;
+	for (int y = H-1; y >= 0; y--) {
+		if (field[y].count() == W-1) {
+			holeY = y;
+			for (int x = 0; x < W; x++) {
+				if (!field[y][x]) {
+					holeX = x;
+					val++;
+					int left = 0, right = 0, ok = 0;
+					for (int yy = holeY-1; yy >= 0; yy--) {
+						int i = holeY - yy;
+						int xx = holeX-(i+!(holeY&1))/2;
+						if (xx < 0) {
+							break;
+						}
+						if (field[yy][xx]) {
+							break;
+						}
+						left++;
+					}
+					for (int yy = holeY-1; yy >= 0; yy--) {
+						int i = holeY - yy;
+						int xx = holeX+(i+(holeY&1))/2;
+						if (xx >= W) {
+							break;
+						}
+						if (field[yy][xx]) {
+							break;
+						}
+						right++;
+					}
+					for (int yy = holeY-1; yy >= 0 && ok < max(left, right); yy--) {
+						if (field[yy].count() != W-1) {
+							break;
+						}
+						ok++;
+					}
+					int k = max(left, right);
+					val += ok + k*k*k;
+					y = holeY - ok;
+				}
+			}
+		}
+	}
+	int cnt = 0;
+	for (int y = 0; y < H; y++) {
+		cnt += field[y].count();
+	}
+	return val * H * W * H + buddhaScore(field) + heightScore(field);
 }

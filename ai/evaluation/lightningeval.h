@@ -22,6 +22,7 @@ class LightningEval{
 	int offensiveCalc(const vector <BitRow> &f);
 	int kadoScore(const vector <BitRow> &f);
 	int buddhaScore(const vector <BitRow> &f);
+	int messiahScore(const vector <BitRow> &f);
 public:
 
 	LightningEval(int H, int W, vector<Unit> &units) : H(H), W(W), units(units){
@@ -38,6 +39,7 @@ public:
 	int calcRand(vector <BitRow> &f, int num);
 	int calcKawatea(vector <BitRow> &f, int num);
 	int calcDangerChance(vector <BitRow> &f, int num);
+	int calcHole(vector <BitRow> &f, int num);
 };
 
 

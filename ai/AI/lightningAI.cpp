@@ -67,7 +67,7 @@ string LightningAI::getCommand(map <pair<Point, int>, int> &parent, Point point,
 }
 
 void LightningAI::debug(const Board &board) {
-    return;
+	//return;
     fprintf(stderr, "%d %d %d\n", board.currentScore, board.powerScore, board.expectedScore);
     fprintf(stderr, "%s\n", board.commands.c_str());
     for (int i = 0; i < game.H; i++) {
@@ -117,11 +117,11 @@ Result LightningAI::run(){
 		beamWidth += slot;
 		slotSizes.push_back(slot);
 	};
-	addEvaluator(&LightningEval::calcDangerChance, 2);
-	addEvaluator(&LightningEval::calcGod, 2);
-	addEvaluator(&LightningEval::calcKawatea, 2);
-	addEvaluator(&LightningEval::calcBuddha, 2);
-	addEvaluator(&LightningEval::calcRand, 2);
+	addEvaluator(&LightningEval::calcMaster, 16);
+	//addEvaluator(&LightningEval::calcBuddha, 5);
+	//addEvaluator(&LightningEval::calcGod, 4);
+	addEvaluator(&LightningEval::calcHole, 4);
+	//addEvaluator(&LightningEval::calcRand, 2);
 
 	int evNum = evaluators.size();
 	// int eachWidth = beamWidth + (evNum - 1) / evNum;
