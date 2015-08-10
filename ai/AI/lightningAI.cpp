@@ -110,6 +110,8 @@ Result LightningAI::run(){
     priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
     priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
+    unordered_set <unsigned long long> states;
+    unordered_set <unsigned> visited;
     ValidTable valid;
     Table table;
     
@@ -130,11 +132,11 @@ Result LightningAI::run(){
     
     for (i = 0; i < game.units.size(); i++) {
         int turnNum = getTurnNum(game.units[i]);
-        unordered_set <unsigned long long> states;
+        
+        states.clear();
         
         for (j = 0; j < beamWidth && !que.empty(); j++) {
             Board board = que.top();
-            unordered_set <unsigned> visited;
             
             que.pop();
             
@@ -154,6 +156,8 @@ Result LightningAI::run(){
             };
             
             if (!isValid(game.units[i].pivot, 0)) continue;
+            
+            visited.clear();
             
             queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
             
