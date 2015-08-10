@@ -211,21 +211,18 @@ Result LightningAI::run(){
             
             if (!isValid(game.units[i].pivot, 0)) continue;
 
-				int spellIx;
-				string spell;
-				for (spellIx = 0; spellIx < game.spells.size(); spellIx++) {
+				for (int spellIx = 0; spellIx < game.spells.size(); spellIx++) {
 
 					if (board.spellMask >> spellIx & 1) {
 						continue;
 					}
-					spell = game.spells[spellIx];
+					string spell = game.spells[spellIx];
 					Point pivot;
 					int theta;
 					if (Util::checkSpell(game.H, game.W, turnNum, board, game.units[i], spell, pivot, theta)) {
 						int score = 300 + 2 * game.spellLens[spellIx];
-						table[State(score, pivot, theta, 0, 6)] = ((unsigned long long)score << 39) | 30;
+						table[State(score, pivot, theta, 0, 6)] = ((unsigned long long)score << 39) | 30 | (spellIx<<5);
 						queSearch.push(State(score, pivot, theta, 0, 6));
-						break;
 					}
 				}
             
@@ -244,6 +241,8 @@ Result LightningAI::run(){
 					reverse(commands.begin(), commands.end());
 
 					if (table[state]&16) {
+						int spellIx = ((table[state]>>5)&31);
+						string &spell = game.spells[spellIx];
 						for (int ci = 0; ci < spell.size(); ci++) {
 							if (spell[ci] < '4') {
 								nextBoard.commands += Util::commandMove[spell[ci] - '0'];
