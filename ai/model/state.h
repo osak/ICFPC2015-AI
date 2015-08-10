@@ -10,13 +10,19 @@ class State {
     int power;
     Point pivot;
     int theta;
+    int bannedPivot;
+    int bannedTheta;
     
-    State(int power, Point &pivot, int theta) : power(power), pivot(pivot), theta(theta) {}
+    State() {}
+    
+    State(int power, Point &pivot, int theta, int bannedPivot, int bannedTheta) : power(power), pivot(pivot), theta(theta), bannedPivot(bannedPivot), bannedTheta(bannedTheta) {}
     
     bool operator<(const State &s) const {
-        if (power != s.power) return power < s.power;
         if (pivot.x != s.pivot.x) return pivot.x > s.pivot.x;
-        if (pivot.y != s.pivot.y) return pivot.y < s.pivot.y;
-        return theta < s.theta;
+        if (power != s.power) return power < s.power;
+        if (pivot.y != s.pivot.y) return pivot.y > s.pivot.y;
+        if (theta != s.theta) return theta > s.theta;
+        if (bannedPivot != s.bannedPivot) return bannedPivot > s.bannedPivot;
+        return bannedTheta > s.bannedTheta;
     }
 };
