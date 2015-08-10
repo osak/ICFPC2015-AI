@@ -338,9 +338,11 @@ Result LightningAI::run(){
                 }
             }
             
-            if (Util::get_time() > game.time - 1) break;
+            if (Util::get_time() > game.time - 1) goto end;
         }
     }
+    
+    end:
 
 	for (auto &myChoku : chokudaiHeaps) {
 		 for (auto &que : myChoku) {
