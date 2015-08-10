@@ -137,143 +137,149 @@ void LightningAI::debug(const Board &board) {
 Result LightningAI::run(){
     int i, j, k;
     int maxScore = -1;
-    int beamWidth = 1;
     string ans = "";
-    priority_queue <Board, vector<Board>, greater<Board> > que, queNext;
-    priority_queue <pair <unsigned, Board> > variety;
     priority_queue <State> queSearch;
     unordered_set <unsigned long long> states;
     unordered_set <unsigned> visited;
-    ValidTable valid;
-    Table table;
-    
+    static ValidTable valid;
+    static Table table;
+
+    vector<set<Board>> chokudaiHeaps(game.units.size() + 1);
+    const int chokudaiHeapCapacity = 10;
+    const int chokudaiSearchLoops = 10;
+
     LightningEval evaluator(game.H, game.W, game.units);
     game.board.expectedScore = evaluator.calc(game.board.field, 0);
-    
-    que.push(game.board);
 
-	int maxVarietySize = beamWidth / 5;
-	auto varietyUpdate = [&](const Board &nextBoard){
-		queNext.push(nextBoard);
-		if (queNext.size() > beamWidth - maxVarietySize) {
-			variety.push(make_pair(Util::GetRandom(), queNext.top()));
-			if (variety.size() >= maxVarietySize) variety.pop();
-			queNext.pop();
-		}
-	};
-    
-    for (i = 0; i < game.units.size(); i++) {
-        int turnNum = getTurnNum(game.units[i]);
-        
-        states.clear();
-        
-        for (j = 0; j < beamWidth && !que.empty(); j++) {
-            Board board = que.top();
-            
-            que.pop();
-            
+    auto chokudaiUpdate = [&](const int turn, const Board &nextBoard){
+        set<Board> &heap = chokudaiHeaps[turn];
+        heap.insert(nextBoard);
+        while (heap.size() > chokudaiHeapCapacity) {
+            heap.erase(heap.begin());
+        }
+    };
+
+    chokudaiUpdate(0, game.board);
+
+    for (int _ = 0; _ < chokudaiSearchLoops; ++_) {
+        for (i = 0; i < game.units.size(); i++) {
+            int turnNum = getTurnNum(game.units[i]);
+            set<Board> &heap = chokudaiHeaps[i];
+            states.clear();
+
+            if (heap.empty()) {
+                continue;
+            }
+
+            auto board_iterator = heap.end(); board_iterator--;
+            Board board = *board_iterator;
+
+            heap.erase(board_iterator);
+
             debug(board);
-            
+
             valid.clear();
             table.clear();
-            
+
             if (board.currentScore + board.powerScore > maxScore) {
                 maxScore = board.currentScore + board.powerScore;
                 ans = board.commands;
             }
-            
+
             auto isValid = [&](Point &pivot, int theta) {
-                if (!valid.count(make_pair(pivot, theta))) valid[make_pair(pivot, theta)] = Util::check(game.H, game.W, board.field, pivot, theta, game.units[i]);
+                if (!valid.count(make_pair(pivot, theta)))
+                    valid[make_pair(pivot, theta)] = Util::check(game.H, game.W, board.field, pivot, theta,
+                                                                 game.units[i]);
                 return valid[make_pair(pivot, theta)];
             };
-            
+
             if (!isValid(game.units[i].pivot, 0)) continue;
-            
+
             visited.clear();
-            
+
             queSearch.push(State(0, game.units[i].pivot, 0, 0, 6));
-            
+
             while (!queSearch.empty()) {
                 bool insert = false;
                 int flag = 0;
                 unsigned hash;
                 State state = queSearch.top();
-                
+
                 queSearch.pop();
-                
+
                 hash = getHash(state);
                 if (visited.count(hash)) continue;
                 visited.insert(hash);
-                
+
                 // 移動
                 for (k = 0; k < 4; k++) {
                     Point pivot = state.pivot;
-                    
+
                     pivot.x += Util::dx[k];
                     pivot.y += Util::dy[state.pivot.x % 2][k];
-                    
+
                     if (!isValid(pivot, state.theta)) {
                         if (insert) continue;
-                        
+
                         insert = true;
                         Board nextBoard = board;
-                        
+
                         update(nextBoard, state.pivot, state.theta, game.units[i]);
-                        
+
                         if (states.count(nextBoard.hash)) continue;
                         states.insert(nextBoard.hash);
-                        
+
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(table, state, Util::commandMove[k]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-						varietyUpdate(nextBoard);
+                        chokudaiUpdate(i + 1, nextBoard);
                     } else {
                         if (k <= 1 && state.bannedPivot == pivot.y && state.bannedTheta == state.theta) continue;
-                        
+
                         State nextState(state.power, pivot, state.theta, state.bannedPivot, state.bannedTheta);
                         if (k >= 2) {
                             nextState.bannedPivot = 0;
                             nextState.bannedTheta = 6;
                         }
-                        
+
                         if (visited.count(getHash(nextState))) continue;
-                        
+
                         flag |= (1 << k);
-                        
+
                         if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
-                        
+
                         table[nextState] = computeData(nextState.power, state, Util::commandMove[k]);
                         queSearch.push(nextState);
                     }
                 }
-                
+
                 // フレーズ (3方向に移動可能なときにei!を唱えられる)
                 if ((flag & 13) == 13) {
                     State nextState1 = state;
-                    
+
                     nextState1.pivot.x += Util::dx[0];
                     nextState1.pivot.y += Util::dy[state.pivot.x % 2][0];
                     nextState1.bannedPivot = 1;
                     nextState1.bannedTheta = 6;
-                    
+
                     State nextState2 = nextState1;
-                    
+
                     nextState2.pivot.x += Util::dx[3];
                     nextState2.pivot.y += Util::dy[state.pivot.x % 2][3];
                     nextState2.bannedPivot = nextState2.pivot.y;
                     nextState2.bannedTheta = nextState2.theta;
-                    
+
                     State nextState3 = nextState2;
-                    
+
                     nextState3.pivot.x += Util::dx[1];
                     nextState3.pivot.y += Util::dy[(state.pivot.x + 1) % 2][1];
-                    
+
                     if (board.powerScore == 0 && state.power == 0) {
                         nextState3.power += 306;
                     } else {
                         nextState3.power += 6;
                     }
-                    
+
                     if (!table.count(nextState3) || getValue(table[nextState3]) < nextState3.power) {
                         table[nextState1] = computeData(nextState1.power, state, Util::commandMove[0]);
                         table[nextState2] = computeData(nextState2.power, nextState1, Util::commandMove[3]);
@@ -281,67 +287,53 @@ Result LightningAI::run(){
                         queSearch.push(nextState3);
                     }
                 }
-                
+
                 // 回転
                 for (k = -1; k <= 1; k++) {
                     if (k == 0) continue;
-                    
+
                     int theta = (state.theta + k + turnNum) % turnNum;
-                    
+
                     if (!isValid(state.pivot, theta)) {
                         if (insert) continue;
-                        
+
                         insert = true;
                         Board nextBoard = board;
-                        
+
                         update(nextBoard, state.pivot, state.theta, game.units[i]);
-                        
+
                         if (states.count(nextBoard.hash)) continue;
                         states.insert(nextBoard.hash);
-                        
+
                         nextBoard.powerScore += state.power;
                         nextBoard.commands += getCommand(table, state, Util::commandRotate[k + 1]);
                         nextBoard.expectedScore = evaluator.calc(nextBoard.field, i + 1);
-						varietyUpdate(nextBoard);
+                        chokudaiUpdate(i + 1, nextBoard);
                     } else {
                         if (state.bannedPivot == state.pivot.y && state.bannedTheta == theta) continue;
-                        
+
                         State nextState(state.power, state.pivot, theta, state.bannedPivot, state.bannedTheta);
-                        
+
                         if (visited.count(getHash(nextState))) continue;
-                        
+
                         if (table.count(nextState) && getValue(table[nextState]) >= state.power) continue;
-                        
+
                         table[nextState] = computeData(nextState.power, state, Util::commandRotate[k + 1]);
                         queSearch.push(nextState);
                     }
                 }
             }
         }
-        
-        while (!que.empty()) {
-            if (que.top().currentScore + que.top().powerScore > maxScore) {
-                maxScore = que.top().currentScore + que.top().powerScore;
-                ans = que.top().commands;
-            }
-            
-            que.pop();
-        }
-        
-        while (!variety.empty()) {
-            queNext.push(variety.top().second);
-            variety.pop();
-        }
-        swap(que, queNext);
     }
-    
-    while (!que.empty()) {
-        if (que.top().currentScore + que.top().powerScore > maxScore) {
-            maxScore = que.top().currentScore + que.top().powerScore;
-            ans = que.top().commands;
+
+    for (auto que : chokudaiHeaps) {
+        for (auto top : que) {
+            if (top.currentScore + top.powerScore > maxScore) {
+                maxScore = top.currentScore + top.powerScore;
+                ans = top.commands;
+            }
+
         }
-        
-        que.pop();
     }
     
     //fprintf(stderr, "%d\n", maxScore);
