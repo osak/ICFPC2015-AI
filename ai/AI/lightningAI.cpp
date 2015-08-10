@@ -126,8 +126,8 @@ Result LightningAI::run(){
 	addEvaluator(&LightningEval::calcMaster);
 	addEvaluator(&LightningEval::calcBuddha);
 	addEvaluator(&LightningEval::calcGod);
-	addEvaluator(&LightningEval::calcHole);
-	addEvaluator(&LightningEval::calcRand);
+	vector<int> order = {0, 1, 2, 0, 1, 0, 1, 2, 0 ,1};
+	//addEvaluator(&LightningEval::calcHole);
 
 	int evNum = evaluators.size();
 
@@ -136,7 +136,7 @@ Result LightningAI::run(){
     const int chokudaiSearchLoops = 10;
 
 	auto capcu = [&](const int generation, const int turn, Board &board, Board &nextBoard) {
-			auto &calc = evaluators[generation % evNum];
+			auto &calc = evaluators[order[generation % order.size()]];
 			nextBoard.expectedScore = (evaluator.*calc)(board, nextBoard, turn);
 			for (int i = 0; i < evNum; i++) {
 				set<Board> &heap = chokudaiHeaps[i][turn];
@@ -155,7 +155,7 @@ Result LightningAI::run(){
     for (int _ = 0; _ < chokudaiSearchLoops; ++_) {
         for (i = 0; i < game.units.size(); i++) {
             int turnNum = getTurnNum(game.units[i]);
-            set<Board> &heap = chokudaiHeaps[_%evNum][i]; /*******?*/
+            set<Board> &heap = chokudaiHeaps[order[_%order.size()]][i];
             states.clear();
 
             if (heap.empty()) {
