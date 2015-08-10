@@ -41,16 +41,6 @@ int LightningEval::dangerScore(const vector <BitRow> &f) {
 	return sum * -200;
 }
 
-int LightningEval::oneUnitScore(const vector <BitRow> &f) {
-	int sum = 0;
-	for (int x = 1; x < H; ++x) {
-		int cnt = f[x].count();
-		if (cnt) sum += W - cnt;
-	}
-	return -sum*sum * 10;
-
-}
-
 int LightningEval::cornerScore(const vector <BitRow> &f) {
 	if (W <= 3) return 0;
 	int b = H - 1, r = W - 1;
@@ -139,7 +129,6 @@ int LightningEval::calcMaster(vector <BitRow> &field, int num){
 	if (num == units.size()) return 0;
 	Unit &next = units[num];
 	if (!Util::check(H, W, field, next.pivot, 0, next)) return -1e9;
-	if (maxUnitSize == 1) return oneUnitScore(field);
 	return kawateaScore(field) + heightScore(field) + chanceScore(field, units.size() - num) + dangerScore(field);
 }
 
